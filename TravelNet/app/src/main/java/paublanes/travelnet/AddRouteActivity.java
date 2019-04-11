@@ -2,7 +2,6 @@ package paublanes.travelnet;
 
 import android.app.DatePickerDialog;
 import android.content.Intent;
-import android.location.Geocoder;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -23,7 +22,7 @@ public class AddRouteActivity extends AppCompatActivity implements View.OnClickL
     Calendar startDate, endDate;
 
     int PLACE_PICKER_REQUEST = 1;
-    final static int ACTIVITY_KEY = 2;
+    final static int ADDROUTE_KEY = 54;
     final static String NEW_ROUTE_KEY = "new route";
 
     @Override
@@ -40,8 +39,8 @@ public class AddRouteActivity extends AppCompatActivity implements View.OnClickL
         et_first_location = findViewById(R.id.et_first_location);
         et_first_location.setOnClickListener(this);
         et_route_name = findViewById(R.id.et_route_name);
-        findViewById(R.id.btn_accept).setOnClickListener(this);
-        findViewById(R.id.btn_cancel).setOnClickListener(this);
+        findViewById(R.id.et_accept).setOnClickListener(this);
+        findViewById(R.id.et_cancel).setOnClickListener(this);
 
     }
 
@@ -107,7 +106,7 @@ public class AddRouteActivity extends AppCompatActivity implements View.OnClickL
             Intent resultIntent = new Intent();
             resultIntent.putExtra(NEW_ROUTE_KEY, route);
 
-            setResult(ACTIVITY_KEY, resultIntent);
+            setResult(RESULT_OK, resultIntent);
 
             finish();
         }
@@ -126,11 +125,13 @@ public class AddRouteActivity extends AppCompatActivity implements View.OnClickL
             case R.id.et_first_location:
                 showPlacePicker();
                 break;
-            case R.id.btn_accept:
+            case R.id.et_accept:
                 createRoute();
                 break;
-            case R.id.btn_cancel:
-                //finish(); //peta pq demana un result pq he fet un startForResult
+            case R.id.et_cancel:
+                Intent resultIntent = new Intent();
+                setResult(RESULT_CANCELED, resultIntent);
+                finish();
                 break;
         }
     }

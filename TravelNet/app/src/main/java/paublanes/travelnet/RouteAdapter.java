@@ -50,7 +50,7 @@ public class RouteAdapter extends RecyclerView.Adapter<RouteAdapter.ViewHolder> 
     public void onBindViewHolder(@NonNull RouteAdapter.ViewHolder viewHolder, final int i) {
 
         Route r = routeList.get(i);
-        viewHolder.tv_routeName.setText(r.getName());
+         viewHolder.tv_routeName.setText(r.getName());
 
         viewHolder.tv_dates.setText(r.stringStartDate() + " - " + r.stringEndDate());
 

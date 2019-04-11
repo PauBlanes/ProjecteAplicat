@@ -6,9 +6,11 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -47,7 +49,7 @@ public class ProfileRouteListFragment extends Fragment {
         recyclerView = view.findViewById(R.id.rv_route_list);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(this.getActivity()));
-
+        Log.d("LIST",((ProfileActivity)this.getActivity()).getRoutes().size() + "");
         myAdapter = new RouteAdapter(this.getActivity(), ((ProfileActivity)this.getActivity()).getRoutes());
         recyclerView.setAdapter(myAdapter);
     }

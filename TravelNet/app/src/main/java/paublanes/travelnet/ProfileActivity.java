@@ -1,22 +1,16 @@
 package paublanes.travelnet;
 
 import android.content.Intent;
-import android.os.Build;
-import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Toast;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 
-public class ProfileActivity extends AppCompatActivity implements View.OnClickListener, RouteAdapter.ItemClicked {
+public class ProfileActivity extends AppCompatActivity
+        implements View.OnClickListener, RouteAdapter.ItemClicked {
 
     ArrayList<Route> routes;
     FloatingActionButton fab_add;
@@ -53,15 +47,17 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == AddRouteActivity.ACTIVITY_KEY) {
-            Route route = (Route)data.getSerializableExtra(AddRouteActivity.NEW_ROUTE_KEY);
-            routes.add(route);
-            listFrag.myAdapter.notifyDataSetChanged();
+        if (resultCode == RESULT_OK){
+            if (requestCode == AddRouteActivity.ADDROUTE_KEY){
+                Route route = (Route)data.getSerializableExtra(AddRouteActivity.NEW_ROUTE_KEY);
+                routes.add(route);
+                listFrag.myAdapter.notifyDataSetChanged();
+            }
         }
     }
 
     void openAddPopup() {
-        startActivityForResult(new Intent(ProfileActivity.this, AddRouteActivity.class), AddRouteActivity.ACTIVITY_KEY);
+        startActivityForResult(new Intent(ProfileActivity.this, AddRouteActivity.class), AddRouteActivity.ADDROUTE_KEY);
     }
 
     @Override
