@@ -17,6 +17,8 @@ public class ProfileActivity extends AppCompatActivity
 
     ProfileRouteListFragment listFrag;
 
+    final static String K_ROUTE_NAME = "name";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,7 +38,9 @@ public class ProfileActivity extends AppCompatActivity
 
     @Override
     public void OnTap(int index) {
-        startActivity(new Intent(ProfileActivity.this, RouteDetailActivity.class));
+        Intent i = new Intent(ProfileActivity.this, RouteDetailActivity.class);
+        i.putExtra(K_ROUTE_NAME, routes.get(index));
+        startActivity(i);
     }
 
     public ArrayList<Route> getRoutes() {
