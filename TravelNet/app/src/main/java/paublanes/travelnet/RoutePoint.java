@@ -12,12 +12,20 @@ public class RoutePoint implements Serializable {
     private Double longitude;
 
     private String placeName;
-    private Date startDate, endDate;
+    private int numNights;
 
     public RoutePoint(Double latitude, Double longitude, String placeName) {
         this.latitude = latitude;
         this.longitude = longitude;
         this.placeName = placeName;
+    }
 
+    public String getPlaceName() {return placeName;}
+
+    public int getNumNights() {
+        return numNights;
+    }
+    public void setNumNights(int numNights) {
+        this.numNights = numNights;
     }
 }
