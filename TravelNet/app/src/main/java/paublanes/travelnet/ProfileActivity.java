@@ -8,16 +8,17 @@ import android.os.Bundle;
 import android.view.View;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 
 public class ProfileActivity extends AppCompatActivity
         implements View.OnClickListener, RouteAdapter.ItemClicked {
 
     ArrayList<Route> routes;
+    int selectedRoute = 0;
+
     FloatingActionButton fab_add;
 
     ProfileRouteListFragment listFrag;
-
-    final static String K_ROUTE_NAME = "name";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,21 +27,31 @@ public class ProfileActivity extends AppCompatActivity
 
         //Create array of predefined routes
         routes = new ArrayList<>();
-        /*if(Build.VERSION.SDK_INT >= 26){
-
-        }*/
 
         //View references
         findViewById(R.id.fab_add).setOnClickListener(this);
+
+        //DEBUG
+        RoutePoint testRoutePoint = new RoutePoint(41.390205, 2.154007, "Barcelona");
+        Calendar testStartDate = Calendar.getInstance();
+        testStartDate.set(2019, 2, 5);
+        Route testRoute = new Route("Ruta 1", testStartDate, testRoutePoint);
+        testRoute.addMoneyInfo(new MoneyInfo("Transport", 0));
+        testRoute.addMoneyInfo(new MoneyInfo("Housing", 0));
+        testRoute.addMoneyInfo(new MoneyInfo("Cash", 0));
+        routes.add(testRoute);
+        //END DEBUG
 
         listFrag = (ProfileRouteListFragment) getSupportFragmentManager().findFragmentById(R.id.listFrag);
     }
 
     @Override
     public void OnTap(int index) {
+        selectedRoute = index;
+
         Intent i = new Intent(ProfileActivity.this, RouteDetailActivity.class);
-        i.putExtra(K_ROUTE_NAME, routes.get(index));
-        startActivity(i);
+        i.putExtra(Keys.SELECTED_ROUTE, routes.get(selectedRoute));
+        startActivityForResult(i, Keys.K_ROUTE_DETAIL);
     }
 
     public ArrayList<Route> getRoutes() {
@@ -52,16 +63,20 @@ public class ProfileActivity extends AppCompatActivity
         super.onActivityResult(requestCode, resultCode, data);
 
         if (resultCode == RESULT_OK){
-            if (requestCode == AddRouteActivity.ADDROUTE_KEY){
-                Route route = (Route)data.getSerializableExtra(AddRouteActivity.NEW_ROUTE_KEY);
+            if (requestCode == Keys.K_ADD_ROUTE){
+                Route route = (Route)data.getSerializableExtra(Keys.NEW_ROUTE);
                 routes.add(route);
                 listFrag.myAdapter.notifyDataSetChanged();
+            }
+            else if (requestCode == Keys.K_ROUTE_DETAIL) {
+                Route route = (Route)data.getSerializableExtra(Keys.SELECTED_ROUTE);
+                routes.set(selectedRoute,route);
             }
         }
     }
 
     void openAddPopup() {
-        startActivityForResult(new Intent(ProfileActivity.this, AddRouteActivity.class), AddRouteActivity.ADDROUTE_KEY);
+        startActivityForResult(new Intent(ProfileActivity.this, AddRouteActivity.class), Keys.K_ADD_ROUTE);
     }
 
     @Override

@@ -28,4 +28,6 @@ public class RoutePoint implements Serializable {
     public void setNumNights(int numNights) {
         this.numNights = numNights;
     }
+
+    public LatLng getCoordinates() {return new LatLng(latitude, longitude);}
 }

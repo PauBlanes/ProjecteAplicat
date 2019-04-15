@@ -54,12 +54,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     String placeName;
 
     //permisos
-    private static final String FINE_LOCATION = Manifest.permission.ACCESS_FINE_LOCATION;
-    private static final String COARSE_LOCATION = Manifest.permission.ACCESS_COARSE_LOCATION;
-    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1234;
+    private final String FINE_LOCATION = Manifest.permission.ACCESS_FINE_LOCATION;
+    private final String COARSE_LOCATION = Manifest.permission.ACCESS_COARSE_LOCATION;
+    private final int LOCATION_PERMISSION_REQUEST_CODE = 1234;
     private boolean locationPermissionGranted = false;
 
-    private static final float DEFAULT_ZOOM = 15f;
+    private final float DEFAULT_ZOOM = 15f;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

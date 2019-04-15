@@ -18,7 +18,7 @@ public class Route implements Serializable {
 
     private ArrayList<RoutePoint> locations;
 
-    private Map<String, Integer> money;
+    private ArrayList<MoneyInfo> moneyInfos;
 
     private ArrayList<String> imageUrls;
 
@@ -28,83 +28,53 @@ public class Route implements Serializable {
 
         locations = new ArrayList<>();
     }
+    public Route(String name, Calendar startDate, RoutePoint rp) {
+        this.name = name;
+        this.startDate = startDate;
 
+        locations = new ArrayList<>();
+        addLocation(rp);
+
+        moneyInfos = new ArrayList<>();
+    }
+
+    //name
     public String getName() {
         return name;
     }
-
     public void setName(String name) {
         this.name = name;
     }
 
-    public String getProfileImageUrl() {
-        return profileImageUrl;
+    //Route Points
+    public ArrayList<RoutePoint> getLocations() {return locations;}
+    public RoutePoint getRoutePoint(int index) {
+        return locations.get(index);
     }
-
-    public void setProfileImageUrl(String profileImageUrl) {
-        this.profileImageUrl = profileImageUrl;
-    }
-
-    public Calendar getStartDate() {
-        return startDate;
-    }
-
-    public void setStartDate(Calendar startDate) {
-        this.startDate = startDate;
-    }
-
-    public Calendar getEndDate() {
-        return endDate;
-    }
-
-    public void setEndDate(Calendar endDate) {
-        this.endDate = endDate;
-    }
-
-    public ArrayList<RoutePoint> getLocations() {
-        return locations;
-    }
-
     public void addLocation (RoutePoint rP) {
         locations.add(rP);
     }
 
-    public Map<String, Integer> getMoney() {
-        return money;
+    //dates
+    public void setEndDate(Calendar endDate) {
+        this.endDate = endDate;
     }
-
-    public void setMoney(Map<String, Integer> money) {
-        this.money = money;
-    }
-
-    public ArrayList<String> getImageUrls() {
-        return imageUrls;
-    }
-
-    public void setImageUrls(ArrayList<String> imageUrls) {
-        this.imageUrls = imageUrls;
-    }
-
-    public String getOwnerID() {
-        return ownerID;
-    }
-
-    public void setOwnerID(String ownerID) {
-        this.ownerID = ownerID;
-    }
-
-    public String stringStartDate() {
+    public String getStartDateString() {
         if (startDate == null){
             return "";
         }
 
         return DateFormat.format("dd/MM/yyyy", startDate).toString();
     }
-    public String stringEndDate() {
+    public String getEndDateString() {
         if (endDate == null){
             return "";
         }
 
         return DateFormat.format("dd/MM/yyyy", endDate).toString();
     }
+
+    //Money
+    public void addMoneyInfo(MoneyInfo mI) {moneyInfos.add(mI);}
+    public ArrayList<MoneyInfo> getMoneyInfo() {return moneyInfos;}
 }

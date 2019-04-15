@@ -22,8 +22,6 @@ public class AddRouteActivity extends AppCompatActivity implements View.OnClickL
     Calendar startDate, endDate;
 
     int PLACE_PICKER_REQUEST = 1;
-    final static int ADDROUTE_KEY = 54;
-    final static String NEW_ROUTE_KEY = "new route";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,18 +91,22 @@ public class AddRouteActivity extends AppCompatActivity implements View.OnClickL
                     Toast.LENGTH_SHORT).show();
         }
         else{
-            Route route = new Route(et_route_name.getText().toString(), startDate);
+
             RoutePoint rP = new RoutePoint(firstLocationCoordinates.latitude,
                     firstLocationCoordinates.longitude,
                     et_first_location.getText().toString());
-            route.addLocation(rP);
+            Route route = new Route(et_route_name.getText().toString(), startDate, rP);
 
             if (!et_end_date.getText().toString().isEmpty()){
                 route.setEndDate(endDate);
             }
 
+            route.addMoneyInfo(new MoneyInfo("Transport", 0));
+            route.addMoneyInfo(new MoneyInfo("Housing", 0));
+            route.addMoneyInfo(new MoneyInfo("Cash", 0));
+
             Intent resultIntent = new Intent();
-            resultIntent.putExtra(NEW_ROUTE_KEY, route);
+            resultIntent.putExtra(Keys.NEW_ROUTE, route);
 
             setResult(RESULT_OK, resultIntent);
 

@@ -28,11 +28,11 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:ems="10"
-            android:gravity="center_horizontal"
-            android:hint="Start date"
-            android:focusable="false"
             android:clickable="true"
+            android:ems="10"
+            android:focusable="false"
+            android:gravity="center_horizontal"
+            android:hint="When it started?"
             android:inputType="date" />
 
         <EditText
@@ -40,11 +40,11 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:ems="10"
-            android:gravity="center_horizontal"
-            android:hint="End date"
-            android:focusable="false"
             android:clickable="true"
+            android:ems="10"
+            android:focusable="false"
+            android:gravity="center_horizontal"
+            android:hint="When it ended?"
             android:inputType="date" />
 
     </LinearLayout>
@@ -53,11 +53,12 @@
         android:id="@+id/et_first_location"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:ems="10"
-        android:hint="Start of the route"
-        android:focusable="false"
         android:clickable="true"
-        android:inputType="textPostalAddress" />
+        android:ems="10"
+        android:focusable="false"
+        android:hint="Where it started?"
+        android:inputType="textPostalAddress"
+        android:paddingLeft="20dp" />
 
     <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
@@ -75,7 +76,8 @@
             android:text="ACCEPT"
             android:textColor="@android:color/holo_green_light"
             android:textSize="18sp"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/et_cancel"
@@ -88,7 +90,8 @@
             android:text="CANCEL"
             android:textColor="@android:color/holo_red_light"
             android:textSize="18sp"
-            app:layout_constraintEnd_toStartOf="@+id/et_accept" />
+            app:layout_constraintEnd_toStartOf="@+id/et_accept"
+            app:layout_constraintTop_toTopOf="parent" />
 
     </android.support.constraint.ConstraintLayout>
 

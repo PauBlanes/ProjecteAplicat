@@ -3,7 +3,6 @@ package paublanes.travelnet;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
-import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -52,7 +51,7 @@ public class RouteAdapter extends RecyclerView.Adapter<RouteAdapter.ViewHolder> 
         Route r = routeList.get(i);
          viewHolder.tv_routeName.setText(r.getName());
 
-        viewHolder.tv_dates.setText(r.stringStartDate() + " - " + r.stringEndDate());
+        viewHolder.tv_dates.setText(r.getStartDateString() + " - " + r.getEndDateString());
 
         viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override

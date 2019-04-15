@@ -15,7 +15,7 @@ public class RoutePointAdapter extends RecyclerView.Adapter<RoutePointAdapter.Vi
 
     MyInterface i_implementator;
     public interface MyInterface {
-        void onTap(int index);
+        void onTapNumNights(int index);
     }
 
     private ArrayList<RoutePoint> routePointsList;
@@ -55,7 +55,7 @@ public class RoutePointAdapter extends RecyclerView.Adapter<RoutePointAdapter.Vi
         viewHolder.layout_nºnights.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                i_implementator.onTap(i);
+                i_implementator.onTapNumNights(i);
             }
         });
 
@@ -65,9 +65,5 @@ public class RoutePointAdapter extends RecyclerView.Adapter<RoutePointAdapter.Vi
     @Override
     public int getItemCount() {
         return routePointsList.size();
-    }
-
-    public void setNumNights(String numNights) {
-
     }
 }

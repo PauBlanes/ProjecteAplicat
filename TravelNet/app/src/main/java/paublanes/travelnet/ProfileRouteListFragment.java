@@ -35,8 +35,6 @@ public class ProfileRouteListFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        //routes.add(new Route("Prova", new Date(1/2/3), new Date(5/8/15)));
-
         // Inflate the layout for this fragment
         view = inflater.inflate(R.layout.fragment_profile_route_list, container, false);
         return view;
