@@ -6,6 +6,7 @@ public class MoneyInfo implements Serializable {
     private String category;
     private int amount;
 
+    public MoneyInfo() {}
     public MoneyInfo(String category, int amount) {
         this.category = category;
         this.amount = amount;

@@ -25,6 +25,7 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
@@ -73,6 +74,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         et_search = findViewById(R.id.et_search);
         findViewById(R.id.btn_confirm).setOnClickListener(this);
         findViewById(R.id.iv_gps).setOnClickListener(this);
+
+        //Cridar el onMapReady
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
     }
 
     private void getDeviceLocation(){
@@ -188,7 +193,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         || event.getAction() == KeyEvent.ACTION_DOWN
                         || event.getAction() == KeyEvent.KEYCODE_ENTER) {
 
-
+                    Toast.makeText(MapsActivity.this, "asd", Toast.LENGTH_SHORT).show();
                     //amagar teclat
                     InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(et_search.getWindowToken(), 0);

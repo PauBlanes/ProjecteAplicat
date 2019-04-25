@@ -130,6 +130,7 @@ public class RouteDetailActivity extends AppCompatActivity implements RoutePoint
 
             //3.refresh la recycler view
             rpAdapter.notifyDataSetChanged();
+
         }
     }
 

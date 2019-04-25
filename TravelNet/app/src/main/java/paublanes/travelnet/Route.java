@@ -2,15 +2,16 @@ package paublanes.travelnet;
 
 import android.text.format.DateFormat;
 
+import com.google.firebase.firestore.Exclude;
+
 import java.io.Serializable;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Map;
 
 public class Route implements Serializable {
 
     private String ownerID;
+    private int listOrder;
 
     private String name;
     private String profileImageUrl;
@@ -18,10 +19,11 @@ public class Route implements Serializable {
 
     private ArrayList<RoutePoint> locations;
 
-    private ArrayList<MoneyInfo> moneyInfos;
+    private ArrayList<MoneyInfo> moneyInfo;
 
     private ArrayList<String> imageUrls;
 
+    public Route(){}
     public Route(String name, Calendar startDate) {
         this.name = name;
         this.startDate = startDate;
@@ -35,7 +37,21 @@ public class Route implements Serializable {
         locations = new ArrayList<>();
         addLocation(rp);
 
-        moneyInfos = new ArrayList<>();
+        moneyInfo = new ArrayList<>();
+    }
+
+    //Owner and order
+    public void setOwnerID(String ownerID) {
+        this.ownerID = ownerID;
+    }
+    public void setListOrder(int listOrder) {
+        this.listOrder = listOrder;
+    }
+    public String getOwnerID() {
+        return ownerID;
+    }
+    public int getListOrder() {
+        return listOrder;
     }
 
     //name
@@ -56,6 +72,7 @@ public class Route implements Serializable {
     }
 
     //dates
+    @Exclude
     public void setEndDate(Calendar endDate) {
         this.endDate = endDate;
     }
@@ -75,6 +92,44 @@ public class Route implements Serializable {
     }
 
     //Money
-    public void addMoneyInfo(MoneyInfo mI) {moneyInfos.add(mI);}
-    public ArrayList<MoneyInfo> getMoneyInfo() {return moneyInfos;}
+    public void addMoneyInfo(MoneyInfo mI) {
+        moneyInfo.add(mI);}
+    public ArrayList<MoneyInfo> getMoneyInfo() {return moneyInfo;}
+
+    public String getProfileImageUrl() {
+        return profileImageUrl;
+    }
+
+    public void setProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
+    }
+
+    @Exclude
+    public Calendar getStartDate() {
+        return startDate;
+    }
+    @Exclude
+    public void setStartDate(Calendar startDate) {
+        this.startDate = startDate;
+    }
+    @Exclude
+    public Calendar getEndDate() {
+        return endDate;
+    }
+
+    public void setLocations(ArrayList<RoutePoint> locations) {
+        this.locations = locations;
+    }
+
+    public void setMoneyInfo(ArrayList<MoneyInfo> moneyInfo) {
+        this.moneyInfo = moneyInfo;
+    }
+
+    public ArrayList<String> getImageUrls() {
+        return imageUrls;
+    }
+
+    public void setImageUrls(ArrayList<String> imageUrls) {
+        this.imageUrls = imageUrls;
+    }
 }

@@ -10,4 +10,7 @@ public class Keys {
     final static int K_ROUTE_DETAIL = 55;
     final static String SELECTED_ROUTE = "selected route";
 
+    //Firebase
+    final static int K_SIGN_IN = 56;
+
 }

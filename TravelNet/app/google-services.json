@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "480237942434",
+    "firebase_url": "https://travelnet-87bd1.firebaseio.com",
+    "project_id": "travelnet-87bd1",
+    "storage_bucket": "travelnet-87bd1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:480237942434:android:2f4cf694febf3f64",
+        "android_client_info": {
+          "package_name": "paublanes.travelnet"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "480237942434-cd6o6v0rro1e2rve46dil8jvp26ijkh6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "paublanes.travelnet",
+            "certificate_hash": "9a0b687bcd528d30aae97b8f74d803831e3be8b5"
+          }
+        },
+        {
+          "client_id": "480237942434-jplkuv8b8dnab063s5u9k4qekg27r8va.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC9vGY_EsIbC1iKhX9DBejiGVIW8WWJ6aI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "480237942434-jplkuv8b8dnab063s5u9k4qekg27r8va.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -51,8 +51,10 @@ public class ProfileMapFragment extends Fragment implements OnMapReadyCallback {
 
     public void showRoutePoints() {
 
-        for (Route route: ((ProfileActivity)this.getActivity()).getRoutes()) {
+        mMap.clear();
 
+        for (Route route: ((ProfileActivity)this.getActivity()).getRoutes()) {
+            
             PolylineOptions plOptions = new PolylineOptions()
                     .width(5)
                     .color(Color.BLACK);
@@ -64,7 +66,6 @@ public class ProfileMapFragment extends Fragment implements OnMapReadyCallback {
             }
             mMap.addPolyline(plOptions);
         }
-
     }
 
 
@@ -90,17 +91,5 @@ public class ProfileMapFragment extends Fragment implements OnMapReadyCallback {
         // Posem el mapa a prop de barcelona.
         //To DO -> Posar a prop de la ubicació del telefon si està activada
         mMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(41.3, 2.18)));
-        
-        showRoutePoints();
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-
-        if (mMap != null) {
-            mMap.clear();
-            showRoutePoints();
-        }
     }
 }
