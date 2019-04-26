@@ -1,7 +1,6 @@
 package paublanes.travelnet;
 
 import android.content.Intent;
-import java.util.Calendar;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -12,25 +11,25 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.firebase.ui.auth.AuthUI;
-import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.SetOptions;
 
-import org.w3c.dom.Document;
-
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.UUID;
 
 public class ProfileActivity extends AppCompatActivity
         implements View.OnClickListener, RouteAdapter.ItemClicked {
@@ -53,18 +52,20 @@ public class ProfileActivity extends AppCompatActivity
     //TAG
     String activityTAG = "Activitat perfil";
 
+    //ACTIVITY LIFE CYCLE
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         //Firebase
         mAuth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
         tryLogin();
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
 
         //Create array of predefined routes
-        routes = new ArrayList<Route>();
+        routes = new ArrayList<>();
 
         //View references
         findViewById(R.id.fab_add).setOnClickListener(this);
@@ -74,38 +75,28 @@ public class ProfileActivity extends AppCompatActivity
         listFrag = (ProfileRouteListFragment) getSupportFragmentManager().findFragmentById(R.id.listFrag);
         mapFrag = (ProfileMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapFrag);
 
-        //DEBUG
-        /*RoutePoint testRoutePoint = new RoutePoint(41.390205, 2.154007, "Barcelona");
-        Calendar testStartDate = Calendar.getInstance();
-        testStartDate.set(2019, 2, 5);
-        Route testRoute = new Route("Ruta 1", testStartDate, testRoutePoint);
-        testRoute.addMoneyInfo(new MoneyInfo("Transport", 0));
-        testRoute.addMoneyInfo(new MoneyInfo("Housing", 0));
-        testRoute.addMoneyInfo(new MoneyInfo("Cash", 0));
-        if (mAuth.getCurrentUser() != null) {
-            testRoute.setOwnerID(mAuth.getCurrentUser().getUid());
-        }else {
-            Log.e(activityTAG, "User is null");
-        }
-        testRoute.setListOrder(routes.size());
-        addRouteAndSaveIt(testRoute);*/
-        //END DEBUG
+        db.collection("Routes").addSnapshotListener(this, new EventListener<QuerySnapshot>() {
+            @Override
+            public void onEvent(@javax.annotation.Nullable QuerySnapshot queryDocumentSnapshots, @javax.annotation.Nullable FirebaseFirestoreException e) {
 
+                for (DocumentChange dc : queryDocumentSnapshots.getDocumentChanges()) {
+                    Toast.makeText(ProfileActivity.this, String.valueOf(dc.getType()), Toast.LENGTH_SHORT).show();
+                }
+
+                downloadFirebaseRoutes();
+                /*for (QueryDocumentSnapshot document: queryDocumentSnapshots) {
+                    Toast.makeText(ProfileActivity.this, "changes", Toast.LENGTH_SHORT).show();
+                }*/
+            }
+        });
     }
 
     @Override
-    public void OnTap(int index) {
-        selectedRoute = index;
+    protected void onResume() {
+        super.onResume();
 
-        Intent i = new Intent(ProfileActivity.this, RouteDetailActivity.class);
-        i.putExtra(Keys.SELECTED_ROUTE, routes.get(selectedRoute));
-        startActivityForResult(i, Keys.K_ROUTE_DETAIL);
+
     }
-
-    public ArrayList<Route> getRoutes() {
-        return routes;
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -120,10 +111,20 @@ public class ProfileActivity extends AppCompatActivity
                 }
                 route.setListOrder(routes.size());
 
-                addRouteAndSaveIt(route);
+                //Add to firebase
+                //FirebaseManager.getInstance().addFirebaseRoute(route);
+
+                //Update Locally
+                routes.add(route);
+                //updateUI();
+
+                addFirebaseRoute(route);
             }
             else if (requestCode == Keys.K_ROUTE_DETAIL) {
                 Route route = (Route)data.getSerializableExtra(Keys.SELECTED_ROUTE);
+
+                /*FirebaseManager.getInstance().updateFirebaseRoute(route);
+                updateUI();*/
 
                 updateFirebaseRoute(route);
             }
@@ -133,44 +134,47 @@ public class ProfileActivity extends AppCompatActivity
         }
     }
 
+    //FIREBASE
     void updateFirebaseRoute (final Route route) {
 
-        //Agafar totes les rutes del meu usuari
-        Query query = db.collection("Routes")
-                .whereEqualTo("ownerID", route.getOwnerID())
-                .whereEqualTo("listOrder", route.getListOrder());
+        DocumentReference docRef = db.document("Routes/"+route.getID());
+        docRef.set(route, SetOptions.merge());
 
-        query.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+        updateUI();
+
+    }
+    void addFirebaseRoute(Route route) {
+
+        final String routeID = UUID.randomUUID().toString();
+        route.setID(routeID);
+
+        final DocumentReference docRef = db.document("Routes/"+routeID);
+        docRef.set(route).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                if(task.isSuccessful()){
+            public void onSuccess(Void aVoid) {
+                Log.d(activityTAG, "DocumentSnapshot added with ID: " + docRef.getId());
 
-                    for (QueryDocumentSnapshot document: task.getResult()){
+                //Add listener
+                /*docRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
+                    @Override
+                    public void onEvent(@javax.annotation.Nullable DocumentSnapshot documentSnapshot, @javax.annotation.Nullable FirebaseFirestoreException e) {
 
-                        db.collection("Routes").document(document.getId())
-                                .set(route, SetOptions.merge());
-
+                        if (documentSnapshot.exists()){
+                            Toast.makeText(ProfileActivity.this, "Document changed", Toast.LENGTH_SHORT).show();
+                        }
                     }
-                    listFrag.myAdapter.notifyDataSetChanged();
-                    mapFrag.showRoutePoints();
-
-                    //getFireBaseData();
-                }else{
-                    Log.e(activityTAG, "Query failed");
-                }
+                });*/
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.w(activityTAG, "Error adding document", e);
             }
         });
-    }
-    void addRouteAndSaveIt(Route route) {
 
-        //Add route locally
-        routes.add(route);
-        if (listFrag.myAdapter != null) {
-            listFrag.myAdapter.notifyDataSetChanged();
-        }
 
-        //Add route to firebase
-        db.collection("Routes")
+
+        /*db.collection("Routes")
                 .add(route)
                 .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                     @Override
@@ -183,10 +187,9 @@ public class ProfileActivity extends AppCompatActivity
                     public void onFailure(@NonNull Exception e) {
                         Log.w(activityTAG, "Error adding document", e);
                     }
-                });
+                });*/
     }
-
-    void getFireBaseData() {
+    void downloadFirebaseRoutes() {
 
         routes.clear();
 
@@ -214,11 +217,25 @@ public class ProfileActivity extends AppCompatActivity
         });
 
     }
+    void tryLogin() {
 
-    void openAddPopup() {
-        startActivityForResult(new Intent(ProfileActivity.this, AddRouteActivity.class), Keys.K_ADD_ROUTE);
+        //Si no estem loguejats
+        if (FirebaseManager.getInstance().isUserNull()) {
+            startActivityForResult(
+                    AuthUI.getInstance()
+                            .createSignInIntentBuilder()
+                            .setAvailableProviders(Arrays.asList(
+                                    new AuthUI.IdpConfig.GoogleBuilder().build(),
+                                    /*new AuthUI.IdpConfig.TwitterBuilder().build(),*/
+                                    new AuthUI.IdpConfig.PhoneBuilder().build(),
+                                    new AuthUI.IdpConfig.EmailBuilder().build()))
+                            .setIsSmartLockEnabled(false)
+                            .build(),
+                    Keys.K_SIGN_IN);
+        }
     }
 
+    //TAP EVENTS
     @Override
     public void onClick(View v) {
         switch (v.getId()){
@@ -238,34 +255,24 @@ public class ProfileActivity extends AppCompatActivity
         }
 
     }
-
     @Override
-    protected void onResume() {
-        super.onResume();
+    public void OnTap(int index) {
+        selectedRoute = index;
 
-        getFireBaseData();
+        Intent i = new Intent(ProfileActivity.this, RouteDetailActivity.class);
+        i.putExtra(Keys.SELECTED_ROUTE, routes.get(selectedRoute));
+        startActivityForResult(i, Keys.K_ROUTE_DETAIL);
+    }
+    void openAddPopup() {
+        startActivityForResult(new Intent(ProfileActivity.this, AddRouteActivity.class), Keys.K_ADD_ROUTE);
     }
 
-    private void tryLogin() {
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-
-        //Si no estem loguejats
-        if (currentUser == null) {
-            startActivityForResult(
-                    AuthUI.getInstance()
-                            .createSignInIntentBuilder()
-                            .setAvailableProviders(Arrays.asList(
-                                    new AuthUI.IdpConfig.GoogleBuilder().build(),
-                                    /*new AuthUI.IdpConfig.TwitterBuilder().build(),*/
-                                    new AuthUI.IdpConfig.PhoneBuilder().build(),
-                                    new AuthUI.IdpConfig.EmailBuilder().build()))
-                            .setIsSmartLockEnabled(false)
-                            .build(),
-                    Keys.K_SIGN_IN);
-        }
-        else {
-            //Cojemos referencia a la base de datos
-            db = FirebaseFirestore.getInstance();
-        }
+    //UTILS
+    public ArrayList<Route> getRoutes() {
+        return routes;
+    }
+    void updateUI() {
+        listFrag.myAdapter.notifyDataSetChanged();
+        mapFrag.showRoutePoints();
     }
 }

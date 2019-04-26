@@ -12,6 +12,7 @@ public class Route implements Serializable {
 
     private String ownerID;
     private int listOrder;
+    private String ID;
 
     private String name;
     private String profileImageUrl;
@@ -102,6 +103,14 @@ public class Route implements Serializable {
 
     public void setProfileImageUrl(String profileImageUrl) {
         this.profileImageUrl = profileImageUrl;
+    }
+
+    //ID
+    public String getID() {
+        return ID;
+    }
+    public void setID(String ID) {
+        this.ID = ID;
     }
 
     @Exclude

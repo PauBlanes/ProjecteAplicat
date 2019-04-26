@@ -31,6 +31,8 @@ public class RouteDetailActivity extends AppCompatActivity implements RoutePoint
     RecyclerView rv_money;
     RecyclerView.Adapter moneyAdapter;
 
+    boolean somethingChanged;
+
     Intent resultIntent;
 
     @Override
@@ -74,8 +76,7 @@ public class RouteDetailActivity extends AppCompatActivity implements RoutePoint
         showNumPicker(index);
     }
 
-    public void showNumPicker(final int index)
-    {
+    public void showNumPicker(final int index) {
         final NumberPicker numberPicker = new NumberPicker(RouteDetailActivity.this);
         numberPicker.setMaxValue(30);
         numberPicker.setMinValue(0);
@@ -88,6 +89,9 @@ public class RouteDetailActivity extends AppCompatActivity implements RoutePoint
 
             @Override
             public void onClick(DialogInterface dialog, int which) {
+
+                somethingChanged = true;
+
                 route.getRoutePoint(index).setNumNights(numberPicker.getValue());
                 rpAdapter.notifyDataSetChanged();
                 dialog.dismiss();
@@ -117,7 +121,10 @@ public class RouteDetailActivity extends AppCompatActivity implements RoutePoint
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == MapsActivity.ACTIVITY_KEY) { //resultCode no es RESULT_OK nse pq
+        if (requestCode == MapsActivity.ACTIVITY_KEY && data != null) { //resultCode no es RESULT_OK nse pq
+
+            //0. Indicar que hi ha ahgut canvis
+            somethingChanged = true;
 
             //1. Obtenir data
             String placeName = data.getStringExtra(MapsActivity.PLACE_NAME_KEY);
@@ -138,7 +145,10 @@ public class RouteDetailActivity extends AppCompatActivity implements RoutePoint
     @Override
     public void finish() {
         resultIntent.putExtra(Keys.SELECTED_ROUTE, route);
-        setResult(RESULT_OK, resultIntent);
+        if (somethingChanged)
+            setResult(RESULT_OK, resultIntent);
+        else
+            setResult(RESULT_CANCELED);
 
         super.finish();
 

@@ -91,5 +91,7 @@ public class ProfileMapFragment extends Fragment implements OnMapReadyCallback {
         // Posem el mapa a prop de barcelona.
         //To DO -> Posar a prop de la ubicació del telefon si està activada
         mMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(41.3, 2.18)));
+
+        showRoutePoints();
     }
 }
