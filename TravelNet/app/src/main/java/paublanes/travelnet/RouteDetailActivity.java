@@ -1,14 +1,17 @@
 package paublanes.travelnet;
 
+import android.content.ClipData;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.Build;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.view.MenuItem;
+import android.util.Log;
 import android.view.View;
 import android.widget.NumberPicker;
 import android.widget.TextView;
@@ -30,6 +33,10 @@ public class RouteDetailActivity extends AppCompatActivity implements RoutePoint
     //Money
     RecyclerView rv_money;
     RecyclerView.Adapter moneyAdapter;
+
+    //Images
+    RecyclerView rv_images;
+    RecyclerView.Adapter imagesAdapter;
 
     //ACTIVITY LIFE CYCLE
     @Override
@@ -65,6 +72,14 @@ public class RouteDetailActivity extends AppCompatActivity implements RoutePoint
         moneyAdapter = new MoneyAdapter(this, route.getMoneyInfo());
         rv_money.setAdapter(moneyAdapter);
 
+        //Images
+        findViewById(R.id.btn_add_photos).setOnClickListener(this);
+        rv_images = findViewById(R.id.rv_photos);
+        rv_images.setHasFixedSize(true);
+        rv_images.setLayoutManager(new GridLayoutManager(this, 4));
+        imagesAdapter = new ImagesArrayAdapter(this, route.getImageUrls());
+        rv_images.setAdapter(imagesAdapter);
+
     }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
@@ -86,9 +101,34 @@ public class RouteDetailActivity extends AppCompatActivity implements RoutePoint
 
                 //4.Avisar firebase
                 FirebaseManager.getInstance().updateRoute(route);
+            }
+            else if (requestCode == Keys.K_IMAGE_ACTIVITY && data != null) {
+                ClipData clipData = data.getClipData();
 
+                if (clipData != null) {
+                    //Add images chosen to route
+                    for (int i = 0;  i < clipData.getItemCount(); i++) {
+                        FirebaseManager.getInstance().uploadImage(clipData.getItemAt(i).getUri(),
+                                this::addImageToRoute);
+                    }
+
+
+
+
+                }
             }
         }
+    }
+
+    void addImageToRoute (String url) {
+        //Update route
+        route.addImageUrl(url);
+
+        //update recyclerview
+        imagesAdapter.notifyDataSetChanged();
+
+        //update firebase
+        FirebaseManager.getInstance().updateRoute(route);
     }
 
     //CHANGE NUM NIGHTS
@@ -130,12 +170,27 @@ public class RouteDetailActivity extends AppCompatActivity implements RoutePoint
         builder.show();
     }
 
+    //PHOTOS
+    void openPhotoPicker() {
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+
+        if (Build.VERSION.SDK_INT>=22) {
+            startActivityForResult(Intent.createChooser(intent, "Select Picture"), Keys.K_IMAGE_ACTIVITY);
+        }
+    }
+
     //TAP EVENTS
     @Override
     public void onClick(View v) {
         switch(v.getId()) {
             case R.id.btn_add_rp:
                 startActivityForResult(new Intent(RouteDetailActivity.this, MapsActivity.class), MapsActivity.ACTIVITY_KEY);
+                break;
+            case R.id.btn_add_photos:
+                openPhotoPicker();
                 break;
         }
     }

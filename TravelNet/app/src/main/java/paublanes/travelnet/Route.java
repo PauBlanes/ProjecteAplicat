@@ -1,6 +1,8 @@
 package paublanes.travelnet;
 
+import android.net.Uri;
 import android.text.format.DateFormat;
+import android.util.Log;
 
 import com.google.firebase.firestore.Exclude;
 
@@ -25,12 +27,6 @@ public class Route implements Serializable {
     private ArrayList<String> imageUrls;
 
     public Route(){}
-    public Route(String name, Calendar startDate) {
-        this.name = name;
-        this.startDate = startDate;
-
-        locations = new ArrayList<>();
-    }
     public Route(String name, Calendar startDate, RoutePoint rp) {
         this.name = name;
         this.startDate = startDate;
@@ -39,6 +35,8 @@ public class Route implements Serializable {
         addLocation(rp);
 
         moneyInfo = new ArrayList<>();
+
+        imageUrls = new ArrayList<>();
     }
 
     //Owner and order
@@ -134,11 +132,12 @@ public class Route implements Serializable {
         this.moneyInfo = moneyInfo;
     }
 
+    //Images
     public ArrayList<String> getImageUrls() {
         return imageUrls;
     }
-
     public void setImageUrls(ArrayList<String> imageUrls) {
         this.imageUrls = imageUrls;
     }
+    public void addImageUrl(String imageUrl) {imageUrls.add(imageUrl);}
 }

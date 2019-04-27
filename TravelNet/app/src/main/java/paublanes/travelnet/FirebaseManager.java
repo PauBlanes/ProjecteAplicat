@@ -2,10 +2,12 @@ package paublanes.travelnet;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.firebase.ui.auth.AuthUI;
+import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -21,18 +23,23 @@ import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.SetOptions;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 
 public class FirebaseManager {
 
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
+    private StorageReference storageReference;
 
     //KEYS and TAGS
     private String ROUTES_COLL_PATH;
@@ -54,6 +61,7 @@ public class FirebaseManager {
         //Get references to auth and database
         this.mAuth = FirebaseAuth.getInstance();
         this.db = FirebaseFirestore.getInstance();
+        this.storageReference = FirebaseStorage.getInstance().getReference();
 
         //Get path to routes
         if(getUser() != null) {
@@ -171,6 +179,40 @@ public class FirebaseManager {
 
         }else{
             Log.e(TAG, "User is null, couldn't create user document");
+        }
+    }
+
+    //Storage
+    void uploadImage (Uri filePath, Consumer<String> c) {
+        if (filePath != null) {
+            final StorageReference ref = storageReference.child(getUser().getUid()+"/"+UUID.randomUUID().toString());
+            UploadTask uploadTask = ref.putFile(filePath);
+
+            Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+                @Override
+                public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
+                    if (!task.isSuccessful()) {
+                        throw task.getException();
+                    }
+                    // Continue with the task to get the download URL
+
+                    return ref.getDownloadUrl();
+                }
+            }).addOnCompleteListener(new OnCompleteListener<Uri>() {
+                @Override
+                public void onComplete(@NonNull Task<Uri> task) {
+                    if (task.isSuccessful()) {
+                        Uri downloadUri = task.getResult();
+                        c.accept(downloadUri.toString());
+                    } else {
+                        // Handle failures
+                        // ...
+                    }
+                }
+            });
+
+        }else{
+            Log.e(TAG, "Image path is null");
         }
     }
 
