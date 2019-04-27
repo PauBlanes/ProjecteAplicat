@@ -20,7 +20,7 @@ public class RouteDetailActivity extends AppCompatActivity implements RoutePoint
 
     Route route;
 
-    //Apartado general
+    //Views
     TextView tv_detail_route_name, tv_detail_start_date, tv_detail_end_date;
 
     //Route point list
@@ -31,19 +31,16 @@ public class RouteDetailActivity extends AppCompatActivity implements RoutePoint
     RecyclerView rv_money;
     RecyclerView.Adapter moneyAdapter;
 
-    boolean somethingChanged;
-
-    Intent resultIntent;
-
+    //ACTIVITY LIFE CYCLE
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_route_detail);
 
+        //Get route
         route = (Route)getIntent().getSerializableExtra(Keys.SELECTED_ROUTE);
 
-        resultIntent = new Intent();
-
+        //Set views
         tv_detail_route_name = findViewById(R.id.tv_detail_route_name);
         tv_detail_route_name.setText(route.getName());
         tv_detail_start_date = findViewById(R.id.tv_detail_start_date);
@@ -69,13 +66,36 @@ public class RouteDetailActivity extends AppCompatActivity implements RoutePoint
         rv_money.setAdapter(moneyAdapter);
 
     }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK) {
+            if (requestCode == MapsActivity.ACTIVITY_KEY && data != null) { //resultCode no es RESULT_OK nse pq
 
-    //interface del recycler view
+                //1. Obtenir data
+                String placeName = data.getStringExtra(MapsActivity.PLACE_NAME_KEY);
+                Bundle bundle = data.getParcelableExtra("bundle");
+                LatLng latLng = bundle.getParcelable(MapsActivity.COORDINATES_KEY);
+
+                //2. Crear route point i afegirlo a la ruta local
+                RoutePoint rp = new RoutePoint(latLng.latitude, latLng.longitude, placeName);
+                route.addLocation(rp);
+
+                //3.refresh la recycler view
+                rpAdapter.notifyDataSetChanged();
+
+                //4.Avisar firebase
+                FirebaseManager.getInstance().updateRoute(route);
+
+            }
+        }
+    }
+
+    //CHANGE NUM NIGHTS
     @Override
     public void onTapNumNights(int index) {
         showNumPicker(index);
     }
-
     public void showNumPicker(final int index) {
         final NumberPicker numberPicker = new NumberPicker(RouteDetailActivity.this);
         numberPicker.setMaxValue(30);
@@ -90,10 +110,11 @@ public class RouteDetailActivity extends AppCompatActivity implements RoutePoint
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
-                somethingChanged = true;
-
                 route.getRoutePoint(index).setNumNights(numberPicker.getValue());
                 rpAdapter.notifyDataSetChanged();
+
+                FirebaseManager.getInstance().updateRoute(route);
+
                 dialog.dismiss();
             }
         });
@@ -109,6 +130,7 @@ public class RouteDetailActivity extends AppCompatActivity implements RoutePoint
         builder.show();
     }
 
+    //TAP EVENTS
     @Override
     public void onClick(View v) {
         switch(v.getId()) {
@@ -118,52 +140,5 @@ public class RouteDetailActivity extends AppCompatActivity implements RoutePoint
         }
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == MapsActivity.ACTIVITY_KEY && data != null) { //resultCode no es RESULT_OK nse pq
 
-            //0. Indicar que hi ha ahgut canvis
-            somethingChanged = true;
-
-            //1. Obtenir data
-            String placeName = data.getStringExtra(MapsActivity.PLACE_NAME_KEY);
-            Bundle bundle = data.getParcelableExtra("bundle");
-            LatLng latLng = bundle.getParcelable(MapsActivity.COORDINATES_KEY);
-
-            //2. Crear route point i afegirlo a la ruta local
-            RoutePoint rp = new RoutePoint(latLng.latitude, latLng.longitude, placeName);
-            route.addLocation(rp);
-
-            //3.refresh la recycler view
-            rpAdapter.notifyDataSetChanged();
-
-        }
-    }
-
-    //ENVIAR INFO AL PERFIL QUAN TIRO ENRERE
-    @Override
-    public void finish() {
-        resultIntent.putExtra(Keys.SELECTED_ROUTE, route);
-        if (somethingChanged)
-            setResult(RESULT_OK, resultIntent);
-        else
-            setResult(RESULT_CANCELED);
-
-        super.finish();
-
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-
-        switch (item.getItemId()){
-            case android.R.id.home:
-                //perque es comporti igual que la fletxeta del mobil
-                finish();
-                return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
 }

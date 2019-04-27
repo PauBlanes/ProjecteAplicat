@@ -274,7 +274,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         args.putParcelable(COORDINATES_KEY, latLang);
         resultIntent.putExtra("bundle", args);
 
-        setResult(ACTIVITY_KEY, resultIntent);
+        setResult(RESULT_OK, resultIntent);
         finish();
     }
 

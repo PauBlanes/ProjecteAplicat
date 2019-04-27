@@ -21,8 +21,7 @@ public class AddRouteActivity extends AppCompatActivity implements View.OnClickL
     LatLng firstLocationCoordinates;
     Calendar startDate, endDate;
 
-    int PLACE_PICKER_REQUEST = 1;
-
+    //ACTIVITY LIFE CYCLE
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,7 +40,20 @@ public class AddRouteActivity extends AppCompatActivity implements View.OnClickL
         findViewById(R.id.et_cancel).setOnClickListener(this);
 
     }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
 
+        if (requestCode == MapsActivity.ACTIVITY_KEY) { //resultCode no es RESULT_OK nse pq
+            String place = data.getStringExtra(MapsActivity.PLACE_NAME_KEY);
+            et_first_location.setText(place);
+
+            Bundle bundle = data.getParcelableExtra("bundle");
+            firstLocationCoordinates = bundle.getParcelable(MapsActivity.COORDINATES_KEY);
+        }
+    }
+
+    //PICKERS
     void showDatePicker(final EditText et_date) {
         DatePickerFragment newFragment = DatePickerFragment.newInstance(new DatePickerDialog.OnDateSetListener() {
             @Override
@@ -68,19 +80,7 @@ public class AddRouteActivity extends AppCompatActivity implements View.OnClickL
        startActivityForResult(new Intent(AddRouteActivity.this, MapsActivity.class), MapsActivity.ACTIVITY_KEY);
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == MapsActivity.ACTIVITY_KEY) { //resultCode no es RESULT_OK nse pq
-            String place = data.getStringExtra(MapsActivity.PLACE_NAME_KEY);
-            et_first_location.setText(place);
-
-            Bundle bundle = data.getParcelableExtra("bundle");
-            firstLocationCoordinates = bundle.getParcelable(MapsActivity.COORDINATES_KEY);
-        }
-    }
-
+    //CREATE
     private void createRoute() {
 
         if (et_route_name.getText().toString().isEmpty()
@@ -91,30 +91,37 @@ public class AddRouteActivity extends AppCompatActivity implements View.OnClickL
                     Toast.LENGTH_SHORT).show();
         }
         else{
-
+            //1. Crear a primera localització
             RoutePoint rP = new RoutePoint(firstLocationCoordinates.latitude,
                     firstLocationCoordinates.longitude,
                     et_first_location.getText().toString());
+
+            //2. Crear ruta
             Route route = new Route(et_route_name.getText().toString(), startDate, rP);
 
+            //3. Afegir data final si n'hi ha
             if (!et_end_date.getText().toString().isEmpty()){
                 route.setEndDate(endDate);
             }
 
+            //4. Afegir info de diner
             route.addMoneyInfo(new MoneyInfo("Transport", 0));
             route.addMoneyInfo(new MoneyInfo("Housing", 0));
             route.addMoneyInfo(new MoneyInfo("Cash", 0));
 
-            Intent resultIntent = new Intent();
-            resultIntent.putExtra(Keys.NEW_ROUTE, route);
+            //5. Afegir ID i ordre
+            route.setOwnerID(FirebaseManager.getInstance().getUser().getUid());
+            route.setListOrder((int)getIntent().getSerializableExtra(Keys.ROUTE_ORDER));
 
-            setResult(RESULT_OK, resultIntent);
+            //6. Pujar a firebase
+            FirebaseManager.getInstance().addRoute(route);
 
             finish();
         }
 
     }
 
+    //TAP EVENTS
     @Override
     public void onClick(View v) {
         switch (v.getId()){
@@ -131,8 +138,6 @@ public class AddRouteActivity extends AppCompatActivity implements View.OnClickL
                 createRoute();
                 break;
             case R.id.et_cancel:
-                Intent resultIntent = new Intent();
-                setResult(RESULT_CANCELED, resultIntent);
                 finish();
                 break;
         }
