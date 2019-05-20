@@ -17,7 +17,7 @@ public class BlankActivity extends AppCompatActivity {
         if (FirebaseManager.getInstance().getUser() == null) {
             startActivityForResult(FirebaseManager.getInstance().getSignInActivity(),Keys.K_SIGN_IN);
         }else{
-            startActivity(new Intent(BlankActivity.this, ProfileActivity.class));
+            FirebaseManager.getInstance().isNewUser(this::manageHasUsernameResult);
         }
     }
     @Override
@@ -27,9 +27,17 @@ public class BlankActivity extends AppCompatActivity {
         if (resultCode == RESULT_OK){
             if (requestCode == Keys.K_SIGN_IN) {
                 Log.d("SIGN IN", "OK");
-                FirebaseManager.getInstance().createUser();
-                startActivity(new Intent(BlankActivity.this, ProfileActivity.class));
+                FirebaseManager.getInstance().hasUsername(this::manageHasUsernameResult);
             }
+        }
+    }
+
+    void manageHasUsernameResult(boolean hasUsername) {
+        if (!hasUsername) {
+            startActivity(new Intent(BlankActivity.this, ChoseUsername.class));
+        }
+        else{
+            startActivity(new Intent(BlankActivity.this, ProfileActivity.class));
         }
     }
 }

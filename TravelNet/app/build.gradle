@@ -5,7 +5,7 @@ android {
     compileSdkVersion 28
     defaultConfig {
         applicationId "paublanes.travelnet"
-        minSdkVersion 19
+        minSdkVersion 24 //era 19
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"

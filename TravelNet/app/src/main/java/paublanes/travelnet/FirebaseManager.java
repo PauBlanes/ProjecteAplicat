@@ -17,9 +17,11 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.SetOptions;
@@ -46,6 +48,8 @@ public class FirebaseManager {
     private final String USERS_C_NAME = "Users";
     private final String ROUTES_C_NAME = "Routes";
     private final String TAG = "Firebase Manager";
+    private final String K_NAME = "name";
+    private final String K_UNIQUENAME = "unique_name";
 
     //Constructors
     private static FirebaseManager instance;
@@ -140,11 +144,51 @@ public class FirebaseManager {
             }
         });
     }
+    void addNameAndUniqueNameIfNotTaken(String name, String uniqueName, Consumer<Boolean> updateUI) {
+        //1. Get collection reference
+        CollectionReference cRef = db.collection(USERS_C_NAME);
+
+        //2.Query for this id
+        Query query = cRef.whereEqualTo(K_UNIQUENAME, uniqueName);
+        query.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if (!task.isSuccessful()) {
+                    Log.d(TAG, "Could not query for unique name");
+                }
+                else{
+                    //Name is taken
+                    if (task.getResult().size() > 0) {
+                        Log.d(TAG, "Unique name is not unique");
+                        updateUI.accept(false);
+                    }
+                    //Name is not taken
+                    else{
+                        //1. Get Document Reference
+                        final DocumentReference docRef = db.collection(USERS_C_NAME).document(getUser().getUid());
+
+                        //2. Generate data to add
+                        Map<String, Object> data = new HashMap<>();
+                        data.put(K_NAME, name);
+                        data.put(K_UNIQUENAME, uniqueName);
+
+                        //3. Add data
+                        docRef.set(data, SetOptions.merge())
+                                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<Void> task) {
+                                        if (task.isSuccessful()) {
+                                            updateUI.accept(true);
+                                        }
+                                    }
+                                });
+                    }
+                }
+            }
+        });
+    }
 
     //Auth
-    FirebaseUser getUser() {
-        return mAuth.getCurrentUser();
-    }
     void logOut(Context context, Runnable tryLogin) {
         AuthUI.getInstance()
                 .signOut(context)
@@ -174,9 +218,65 @@ public class FirebaseManager {
 
             documentReference.set(userInfo, SetOptions.merge());
 
-            //Modificar path per si canviem de conta
+            //Modificar path per si venim d'una altra conta
             ROUTES_COLL_PATH = USERS_C_NAME + "/" + getUser().getUid() + "/" + ROUTES_C_NAME;
 
+        }else{
+            Log.e(TAG, "User is null, couldn't create user document");
+        }
+    }
+    FirebaseUser getUser() {
+        return mAuth.getCurrentUser();
+    }
+    void isNewUser(Consumer<Boolean> completionHandler) {
+        if(getUser() != null) {
+            DocumentReference docRef = db.document(USERS_C_NAME + "/" + getUser().getUid());
+            docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                    if (task.isSuccessful()) {
+                        DocumentSnapshot document = task.getResult();
+                        if (document.exists()) {
+                            Log.d(TAG, "Document exists!");
+                            completionHandler.accept(false);
+                        } else {
+                            Log.d(TAG, "Document does not exist!");
+                            completionHandler.accept(true);
+                        }
+                    } else {
+                        Log.d(TAG, "Failed with: ", task.getException());
+                    }
+                }
+            });
+        }else{
+            Log.e(TAG, "User is null, couldn't create user document");
+        }
+    }
+    void hasUsername(Consumer<Boolean> completionHandler) {
+        if(getUser() != null) {
+            DocumentReference docRef = db.document(USERS_C_NAME + "/" + getUser().getUid());
+            docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                    if (task.isSuccessful()) {
+                        DocumentSnapshot document = task.getResult();
+                        if (document.exists()) {
+                            Log.d(TAG, "Document exists!");
+                            Map<String, Object> data = document.getData();
+                            if (data.containsKey(K_UNIQUENAME)){
+                                completionHandler.accept(true);
+                            }else{
+                                completionHandler.accept(false);
+                            }
+                        } else {
+                            Log.d(TAG, "Document does not exist!");
+                            completionHandler.accept(false);
+                        }
+                    } else {
+                        Log.d(TAG, "Failed with: ", task.getException());
+                    }
+                }
+            });
         }else{
             Log.e(TAG, "User is null, couldn't create user document");
         }
@@ -215,6 +315,4 @@ public class FirebaseManager {
             Log.e(TAG, "Image path is null");
         }
     }
-
-
 }
