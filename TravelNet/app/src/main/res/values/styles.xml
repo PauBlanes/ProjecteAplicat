@@ -1,11 +1,31 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar"> <!-- no actionbar?-->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar"> <!-- no actionbar?-->
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="overlapAnchor">false</item> <!-- pels items del menu, que quedin per sota-->
+    </style>
+
+    <style name="OverflowMenu" parent="Widget.AppCompat.PopupMenu.Overflow">
+
+    </style>
+
+    <style name="AppTheme.AppBarOverlay" parent="Theme.AppCompat.Light.DarkActionBar" />
+
+    <style name="MaterialSearchViewStyle">
+        <!-- Background for the search bar -->
+        <item name="searchBackground">@color/colorAccent</item>
+        <!-- Change icon for the suggestions
+        <item name="searchSuggestionIcon">@drawable/ic_suggestion</item>-->
+        <!-- Change background for the suggestions list view -->
+        <item name="searchSuggestionBackground">@color/colorAccent</item>
+        <!-- Change text color for edit text. This will also be the color of the cursor
+        <item name="android:textColor">@color/theme_primary_text_inverted</item>-->
+        <!-- Change hint text color for edit text
+        <item name="android:textColorHint">@color/theme_secondary_text_inverted</item>-->
     </style>
 
 </resources>

@@ -5,4 +5,15 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="title_activity_maps">Map</string>
     <string name="title_activity_add_route">Add Route</string>
+    <string name="search_hint">Enter a username...</string>
+    
+    <string-array name="proves">
+        <item>Pau</item>
+        <item>Pere</item>
+        <item>Poblenou</item>
+        <item>Pol</item>
+        <item>Miquel</item>
+        <item>Martina</item>
+        <item>Joan</item>
+    </string-array>
 </resources>
