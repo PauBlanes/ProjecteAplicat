@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.Continuation;
@@ -21,6 +22,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
@@ -32,6 +34,7 @@ import com.google.firebase.storage.UploadTask;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -44,7 +47,6 @@ public class FirebaseManager {
     private StorageReference storageReference;
 
     //KEYS and TAGS
-    private String ROUTES_COLL_PATH;
     private final String USERS_C_NAME = "Users";
     private final String ROUTES_C_NAME = "Routes";
     private final String TAG = "Firebase Manager";
@@ -66,19 +68,11 @@ public class FirebaseManager {
         this.mAuth = FirebaseAuth.getInstance();
         this.db = FirebaseFirestore.getInstance();
         this.storageReference = FirebaseStorage.getInstance().getReference();
-
-        //Get path to routes
-        if(getUser() != null) {
-            ROUTES_COLL_PATH = USERS_C_NAME + "/" + getUser().getUid() + "/" + ROUTES_C_NAME;
-
-        }else{
-            Log.e(TAG, "User is null, coudn't get path");
-        }
     }
 
     //Firestore
-    void initLister(final ArrayList<Route> routes, final Runnable updateUI) {
-        CollectionReference cRef = db.collection(ROUTES_COLL_PATH);
+    void initListener(final ArrayList<Route> routes, final Runnable updateUI) {
+        CollectionReference cRef = db.collection(getMyRoutesPath());
 
         cRef.addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
@@ -87,14 +81,13 @@ public class FirebaseManager {
                     for (DocumentChange dc : queryDocumentSnapshots.getDocumentChanges()) {
                         Log.d(TAG, String.valueOf(dc.getType()));
                     }
-
-                    downloadRoutes(routes, updateUI);
+                    downloadRoutes(routes, updateUI, getUser().getUid());
                 }
             }
         });
     }
     void updateRoute (final Route route) {
-        DocumentReference docRef = db.collection(ROUTES_COLL_PATH).document(route.getID());
+        DocumentReference docRef = db.collection(getMyRoutesPath()).document(route.getID());
         docRef.set(route, SetOptions.merge());
     }
     void addRoute(Route route) {
@@ -104,7 +97,7 @@ public class FirebaseManager {
         route.setID(routeID);
 
         //2. Crear y subir documento
-        final DocumentReference docRef = db.collection(ROUTES_COLL_PATH).document(routeID);
+        final DocumentReference docRef = db.collection(getMyRoutesPath()).document(routeID);
         docRef.set(route).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
@@ -117,16 +110,18 @@ public class FirebaseManager {
             }
         });
     }
-    void downloadRoutes(final ArrayList<Route> routes, final Runnable updateUI) {
+    void downloadRoutes(final ArrayList<Route> routes, final Runnable updateUI, String userId) {
 
-        //Agafar totes les rutes del meu usuari
-        CollectionReference cRef = db.collection(ROUTES_COLL_PATH);
+        //1.Reference to my routes collection
+        CollectionReference cRef = db.collection(getRoutesPathFromId(userId));
         //Query query = cRef.whereEqualTo("ownerID", mAuth.getCurrentUser().getUid());
 
+        //2. Add listener
         /*query*/cRef.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
             @Override
             public void onComplete(@NonNull Task<QuerySnapshot> task) {
                 if(task.isSuccessful()){
+                    //3. Add routes
                     routes.clear();
                     for (QueryDocumentSnapshot document: task.getResult()){
 
@@ -134,15 +129,143 @@ public class FirebaseManager {
                         routes.add(route);
                     }
 
-                    //Funcio updateUI
+                    //4. Update the UI
                     updateUI.run();
-                    //listFrag.myAdapter.notifyDataSetChanged();
-                    //mapFrag.showRoutePoints();
+
                 }else{
                     Log.e(TAG, "Query failed");
                 }
             }
         });
+    }
+
+    //Auth
+    void logOut(Context context, Runnable completionHandler) {
+        AuthUI.getInstance()
+                .signOut(context)
+                .addOnCompleteListener(new OnCompleteListener<Void>() { //pq et deixi tornar a triar conta
+                    public void onComplete(@NonNull Task<Void> task) {
+                        // user is now signed out
+                        completionHandler.run();
+                    }
+                });
+    }
+    Intent getSignInActivity() {
+        return AuthUI.getInstance()
+                .createSignInIntentBuilder()
+                .setAvailableProviders(Arrays.asList(
+                        new AuthUI.IdpConfig.GoogleBuilder().build(),
+                        /*new AuthUI.IdpConfig.TwitterBuilder().build(),*/
+                        new AuthUI.IdpConfig.PhoneBuilder().build(),
+                        new AuthUI.IdpConfig.EmailBuilder().build()))
+                .setIsSmartLockEnabled(false)
+                .build();
+    }
+    void createUser() {
+        if(getUser() != null) {
+            DocumentReference documentReference = db.document(USERS_C_NAME + "/" + getUser().getUid());
+            Map<String, String> userInfo = new HashMap<String, String>();
+            userInfo.put("id", getUser().getUid());
+
+            documentReference.set(userInfo, SetOptions.merge());
+
+        }else{
+            Log.e(TAG, "User is null, couldn't create user document");
+        }
+    }
+    FirebaseUser getUser() {
+        return mAuth.getCurrentUser();
+    }
+    void isNewUser(Consumer<Boolean> completionHandler) {
+        if(getUser() != null) {
+            DocumentReference docRef = db.document(USERS_C_NAME + "/" + getUser().getUid());
+            docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                    if (task.isSuccessful()) {
+                        DocumentSnapshot document = task.getResult();
+                        if (document.exists()) {
+                            Log.d(TAG, "Document exists!");
+                            completionHandler.accept(false);
+                        } else {
+                            Log.d(TAG, "Document does not exist!");
+                            completionHandler.accept(true);
+                        }
+                    } else {
+                        Log.d(TAG, "Failed with: ", task.getException());
+                    }
+                }
+            });
+        }else{
+            Log.e(TAG, "User is null, couldn't create user document");
+        }
+    }
+
+    //Storage
+    void uploadImage (Uri filePath, Consumer<String> completionHandler) {
+        if (filePath != null) {
+            final StorageReference ref = storageReference.child(getUser().getUid()+"/"+UUID.randomUUID().toString());
+            UploadTask uploadTask = ref.putFile(filePath);
+
+            Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+                @Override
+                public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
+                    if (!task.isSuccessful()) {
+                        throw task.getException();
+                    }
+                    // Continue with the task to get the download URL
+
+                    return ref.getDownloadUrl();
+                }
+            }).addOnCompleteListener(new OnCompleteListener<Uri>() {
+                @Override
+                public void onComplete(@NonNull Task<Uri> task) {
+                    if (task.isSuccessful()) {
+                        Uri downloadUri = task.getResult();
+                        completionHandler.accept(downloadUri.toString());
+                    } else {
+                        // Handle failures
+                        // ...
+                    }
+                }
+            });
+
+        }else{
+            Log.e(TAG, "Image path is null");
+        }
+    }
+
+    //Username
+    void hasUsername(Consumer<Boolean> completionHandler) {
+        if(getUser() != null) {
+            DocumentReference docRef = db.document(USERS_C_NAME + "/" + getUser().getUid());
+            docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                    if (task.isSuccessful()) {
+                        DocumentSnapshot document = task.getResult();
+                        if (document.exists()) {
+                            Log.d(TAG, "Username: Document exists!");
+                            Map<String, Object> data = document.getData();
+                            if (data.containsKey(K_UNIQUENAME)){
+                                completionHandler.accept(true);
+                                Log.d(TAG, "Username: Has username");
+                            }else{
+                                completionHandler.accept(false);
+                                Log.d(TAG, "Username: Exists but has no key");
+                            }
+                        } else {
+                            Log.d(TAG, "Document does not exist!");
+                            completionHandler.accept(false);
+                        }
+                    } else {
+                        Log.d(TAG, "Failed with: ", task.getException());
+                    }
+                }
+            });
+        }else{
+            Log.e(TAG, "User is null, couldn't create user document");
+        }
     }
     void addNameAndUniqueNameIfNotTaken(String name, String uniqueName, Consumer<Boolean> updateUI) {
         //1. Get collection reference
@@ -187,132 +310,70 @@ public class FirebaseManager {
             }
         });
     }
+    void getUsernames(Consumer<List<String>> completionHandler){
+        List<String> usernames = new ArrayList<String>();
 
-    //Auth
-    void logOut(Context context, Runnable tryLogin) {
-        AuthUI.getInstance()
-                .signOut(context)
-                .addOnCompleteListener(new OnCompleteListener<Void>() { //pq et deixi tornar a triar conta
-                    public void onComplete(@NonNull Task<Void> task) {
-                        // user is now signed out
-                        tryLogin.run();
-                    }
-                });
-    }
-    Intent getSignInActivity() {
-        return AuthUI.getInstance()
-                .createSignInIntentBuilder()
-                .setAvailableProviders(Arrays.asList(
-                        new AuthUI.IdpConfig.GoogleBuilder().build(),
-                        /*new AuthUI.IdpConfig.TwitterBuilder().build(),*/
-                        new AuthUI.IdpConfig.PhoneBuilder().build(),
-                        new AuthUI.IdpConfig.EmailBuilder().build()))
-                .setIsSmartLockEnabled(false)
-                .build();
-    }
-    void createUser() {
-        if(getUser() != null) {
-            DocumentReference documentReference = db.document(USERS_C_NAME + "/" + getUser().getUid());
-            Map<String, String> userInfo = new HashMap<String, String>();
-            userInfo.put("id", getUser().getUid());
+        //1. Reference to users collection
+        CollectionReference cRef = db.collection(USERS_C_NAME);
 
-            documentReference.set(userInfo, SetOptions.merge());
+        //2.Retrieve usernames
+        cRef.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if(task.isSuccessful()){
 
-            //Modificar path per si venim d'una altra conta
-            ROUTES_COLL_PATH = USERS_C_NAME + "/" + getUser().getUid() + "/" + ROUTES_C_NAME;
+                    for (QueryDocumentSnapshot document: task.getResult()){
 
-        }else{
-            Log.e(TAG, "User is null, couldn't create user document");
-        }
-    }
-    FirebaseUser getUser() {
-        return mAuth.getCurrentUser();
-    }
-    void isNewUser(Consumer<Boolean> completionHandler) {
-        if(getUser() != null) {
-            DocumentReference docRef = db.document(USERS_C_NAME + "/" + getUser().getUid());
-            docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                @Override
-                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                    if (task.isSuccessful()) {
-                        DocumentSnapshot document = task.getResult();
-                        if (document.exists()) {
-                            Log.d(TAG, "Document exists!");
-                            completionHandler.accept(false);
-                        } else {
-                            Log.d(TAG, "Document does not exist!");
-                            completionHandler.accept(true);
+                        //Exclude my own id
+                        String docId = document.getId();
+                        String myId = getUser().getUid();
+                        if (!docId.equals(myId)){
+                            usernames.add(document.get(K_UNIQUENAME).toString());
                         }
-                    } else {
-                        Log.d(TAG, "Failed with: ", task.getException());
                     }
+
+                    completionHandler.accept(usernames);
+
+                }else{
+                    Log.e(TAG, "Query failed");
                 }
-            });
-        }else{
-            Log.e(TAG, "User is null, couldn't create user document");
-        }
+            }
+        });
     }
-    void hasUsername(Consumer<Boolean> completionHandler) {
-        if(getUser() != null) {
-            DocumentReference docRef = db.document(USERS_C_NAME + "/" + getUser().getUid());
-            docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                @Override
-                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                    if (task.isSuccessful()) {
-                        DocumentSnapshot document = task.getResult();
-                        if (document.exists()) {
-                            Log.d(TAG, "Document exists!");
-                            Map<String, Object> data = document.getData();
-                            if (data.containsKey(K_UNIQUENAME)){
-                                completionHandler.accept(true);
-                            }else{
-                                completionHandler.accept(false);
-                            }
-                        } else {
-                            Log.d(TAG, "Document does not exist!");
-                            completionHandler.accept(false);
-                        }
-                    } else {
-                        Log.d(TAG, "Failed with: ", task.getException());
+    void showRoutesOf(String nameToSearch,final ArrayList<Route> routes, final Runnable updateUI,
+                      final Runnable completionHandler) {
+        //1. Get Collection of users
+        CollectionReference cRef = db.collection(USERS_C_NAME);
+
+        //2. Find the one with the correct NAME
+        Query query = cRef.whereEqualTo(K_UNIQUENAME, nameToSearch);
+        query.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if(task.isSuccessful()){
+                    DocumentSnapshot doc = task.getResult().getDocuments().get(0);
+                    if (doc.exists()) {
+                        Log.d(TAG, "Document with uique id exists");
+                        //3. Download their routes
+                        downloadRoutes(routes, updateUI, doc.getId());
+
+                        //4. Callback
+                        completionHandler.run();
+                    }else{
+                        Log.d(TAG, "Document with uique id does not exist");
                     }
+                }else{
+                    Log.e(TAG, "Query to find doc from unique_name failed");
                 }
-            });
-        }else{
-            Log.e(TAG, "User is null, couldn't create user document");
-        }
+            }
+        });
     }
 
-    //Storage
-    void uploadImage (Uri filePath, Consumer<String> c) {
-        if (filePath != null) {
-            final StorageReference ref = storageReference.child(getUser().getUid()+"/"+UUID.randomUUID().toString());
-            UploadTask uploadTask = ref.putFile(filePath);
-
-            Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
-                @Override
-                public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
-                    if (!task.isSuccessful()) {
-                        throw task.getException();
-                    }
-                    // Continue with the task to get the download URL
-
-                    return ref.getDownloadUrl();
-                }
-            }).addOnCompleteListener(new OnCompleteListener<Uri>() {
-                @Override
-                public void onComplete(@NonNull Task<Uri> task) {
-                    if (task.isSuccessful()) {
-                        Uri downloadUri = task.getResult();
-                        c.accept(downloadUri.toString());
-                    } else {
-                        // Handle failures
-                        // ...
-                    }
-                }
-            });
-
-        }else{
-            Log.e(TAG, "Image path is null");
-        }
+    //Others
+    String getMyRoutesPath() {
+        return USERS_C_NAME + "/" + getUser().getUid() + "/" + ROUTES_C_NAME;
+    }
+    String getRoutesPathFromId(String id) {
+        return USERS_C_NAME + "/" + id + "/" + ROUTES_C_NAME;
     }
 }

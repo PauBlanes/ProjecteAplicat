@@ -19,6 +19,7 @@ public class Route implements Serializable {
     private String name;
     private String profileImageUrl;
     private Calendar startDate, endDate;
+    private String startDateString, endDateString;
 
     private ArrayList<RoutePoint> locations;
 
@@ -30,6 +31,7 @@ public class Route implements Serializable {
     public Route(String name, Calendar startDate, RoutePoint rp) {
         this.name = name;
         this.startDate = startDate;
+        this.startDateString = dateToString(startDate);
 
         locations = new ArrayList<>();
         addLocation(rp);
@@ -69,48 +71,29 @@ public class Route implements Serializable {
     public void addLocation (RoutePoint rP) {
         locations.add(rP);
     }
+    public void setLocations(ArrayList<RoutePoint> locations) {
+        this.locations = locations;
+    }
 
     //dates
     @Exclude
     public void setEndDate(Calendar endDate) {
         this.endDate = endDate;
+        this.endDateString = dateToString(endDate);
     }
     public String getStartDateString() {
         if (startDate == null){
             return "";
         }
-
-        return DateFormat.format("dd/MM/yyyy", startDate).toString();
+        return dateToString(startDate);
     }
     public String getEndDateString() {
         if (endDate == null){
             return "";
         }
 
-        return DateFormat.format("dd/MM/yyyy", endDate).toString();
+        return dateToString(endDate);
     }
-
-    //Money
-    public void addMoneyInfo(MoneyInfo mI) {
-        moneyInfo.add(mI);}
-    public ArrayList<MoneyInfo> getMoneyInfo() {return moneyInfo;}
-
-    public String getProfileImageUrl() {
-        return profileImageUrl;
-    }
-
-    public void setProfileImageUrl(String profileImageUrl) {
-        this.profileImageUrl = profileImageUrl;
-    }
-
-    //ID
-    public String getID() {
-        return ID;
-    }
-    public void setID(String ID) {
-        this.ID = ID;
-    }
-
     @Exclude
     public Calendar getStartDate() {
         return startDate;
@@ -123,13 +106,33 @@ public class Route implements Serializable {
     public Calendar getEndDate() {
         return endDate;
     }
-
-    public void setLocations(ArrayList<RoutePoint> locations) {
-        this.locations = locations;
+    @Exclude
+    public String dateToString(Calendar date){
+        return DateFormat.format("dd/MM/yyyy", date).toString();
     }
 
+    //Money
+    public void addMoneyInfo(MoneyInfo mI) {
+        moneyInfo.add(mI);}
+    public ArrayList<MoneyInfo> getMoneyInfo() {return moneyInfo;}
     public void setMoneyInfo(ArrayList<MoneyInfo> moneyInfo) {
         this.moneyInfo = moneyInfo;
+    }
+
+    //Profile image
+    public String getProfileImageUrl() {
+        return profileImageUrl;
+    }
+    public void setProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
+    }
+
+    //ID
+    public String getID() {
+        return ID;
+    }
+    public void setID(String ID) {
+        this.ID = ID;
     }
 
     //Images

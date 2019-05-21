@@ -41,8 +41,10 @@ public class ChoseUsername extends AppCompatActivity implements View.OnClickList
                 if (!name.getText().toString().isEmpty() && !uniqueName.getText().toString().isEmpty()
                 && !uniqueName.getText().toString().equals(R.string.name_not_unique)) {
 
+                    //no ho pujo amb el @ pq sino per fer cerques no va bé
                     FirebaseManager.getInstance().addNameAndUniqueNameIfNotTaken(
-                            name.getText().toString(), "@" + uniqueName.getText().toString(), this::updateUI);
+                            name.getText().toString(), uniqueName.getText().toString(), this::updateUI);
+
                 }
                 else{
                     Toast.makeText(this, getString(R.string.enter_all_fields), Toast.LENGTH_SHORT).show();
@@ -61,4 +63,14 @@ public class ChoseUsername extends AppCompatActivity implements View.OnClickList
             uniqueName.setTextColor(Color.RED);
         }
     }
+
+    @Override
+    public void onBackPressed() {
+        FirebaseManager.getInstance().logOut(this, () -> {
+            Log.d("CHOSE USERNAME","log out success");
+            startActivity(new Intent(ChoseUsername.this, BlankActivity.class));
+        });
+    }
 }
+
+

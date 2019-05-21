@@ -1,6 +1,7 @@
 package paublanes.travelnet;
 
 import android.content.Intent;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -12,6 +13,7 @@ import android.support.v7.widget.Toolbar;
 import com.miguelcatalan.materialsearchview.MaterialSearchView;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class ProfileActivity extends AppCompatActivity
         implements View.OnClickListener, RouteAdapter.ItemClicked {
@@ -28,6 +30,12 @@ public class ProfileActivity extends AppCompatActivity
     MaterialSearchView searchView;
     Toolbar toolbar;
 
+    //Views
+    FloatingActionButton btn_add_route;
+
+    //Is my profile?
+    boolean isMyProfile = true;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -38,19 +46,20 @@ public class ProfileActivity extends AppCompatActivity
         routes = new ArrayList<>();
 
         //Get view references
-        findViewById(R.id.fab_add).setOnClickListener(this);
+        btn_add_route = findViewById(R.id.fab_add);
+        btn_add_route.setOnClickListener(this);
 
         //Get fragment references
         listFrag = (ProfileRouteListFragment) getSupportFragmentManager().findFragmentById(R.id.listFrag);
         mapFrag = (ProfileMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapFrag);
 
-        //Start firebase listener
-        FirebaseManager.getInstance().initLister(routes, this::updateUI);
-
         //Searchview
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         initSearchView();
+
+        //Firebase
+        FirebaseManager.getInstance().initListener(routes,this::updateUI);
     }
 
     //TAP EVENTS
@@ -86,9 +95,15 @@ public class ProfileActivity extends AppCompatActivity
     void updateUI() {
         listFrag.myAdapter.notifyDataSetChanged();
         mapFrag.showRoutePoints();
+
+        if (!isMyProfile) {
+            btn_add_route.setVisibility(View.GONE);
+        }else{
+            btn_add_route.setVisibility(View.VISIBLE);
+        }
     }
 
-    //ACTION BAR
+    //OPTIONS MENU
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.profile, menu);
@@ -112,40 +127,55 @@ public class ProfileActivity extends AppCompatActivity
 
         return super.onOptionsItemSelected(item);
     }
-    private void initSearchView() {
+    @Override
+    public void onBackPressed() {
+        if (searchView.isSearchOpen()) {
+            searchView.closeSearch();
+        }
+        else if(!isMyProfile) {
+            FirebaseManager.getInstance().initListener(routes, this::updateUI);
+        }
+        else{
+            super.onBackPressed();
+        }
+    }
+
+    //SEARCH VIEW
+    public void initSearchView() {
         searchView = findViewById(R.id.search_view);
         searchView.setEllipsize(true);
         searchView.setOnQueryTextListener(new MaterialSearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                Toast.makeText(ProfileActivity.this, query, Toast.LENGTH_SHORT).show();
+                FirebaseManager.getInstance().showRoutesOf(query, routes, ProfileActivity.this::updateUI,
+                        ()->{isMyProfile = false;});
                 return false;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
+                //TO DO -> considerar qualsevol coincidencia en comptes de només lletra a lletra linealment
                 return false;
             }
         });
         searchView.setOnSearchViewListener(new MaterialSearchView.SearchViewListener() {
             @Override
             public void onSearchViewShown() {
-                searchView.setSuggestions(getResources().getStringArray(R.array.proves)); //si ho poso abans es queda la pantalla blanca
+                FirebaseManager.getInstance().getUsernames(ProfileActivity.this::updateSuggestions);
+                btn_add_route.setVisibility(View.GONE);
             }
             @Override
             public void onSearchViewClosed() {
-                //Do some magic
+                btn_add_route.setVisibility(View.VISIBLE);
             }
         });
-    }
-    @Override
-    public void onBackPressed() {
-        if (searchView.isSearchOpen()) {
-            searchView.closeSearch();
-        }
-        else{
-            super.onBackPressed();
-        }
 
+    }
+    public void updateSuggestions (List<String> usernames) {
+
+        String[] listToArray = new String[usernames.size()];
+        listToArray = usernames.toArray(listToArray);
+
+        searchView.setSuggestions(listToArray);
     }
 }
