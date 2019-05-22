@@ -13,14 +13,6 @@ public class BlankActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_blank);
-
-
-        //Start Auth flow
-        /*if (FirebaseManager.getInstance().getUser() == null) {
-            startActivityForResult(FirebaseManager.getInstance().getSignInActivity(),Keys.K_SIGN_IN);
-        }else{
-            FirebaseManager.getInstance().hasUsername(this::manageHasUsernameResult);
-        }*/
     }
 
     @Override
@@ -55,6 +47,7 @@ public class BlankActivity extends AppCompatActivity {
         }
         else{
             startActivity(new Intent(BlankActivity.this, ProfileActivity.class));
+            finish();
         }
     }
 }

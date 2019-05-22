@@ -7,6 +7,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -22,12 +23,12 @@ public class ChoseUsername extends AppCompatActivity implements View.OnClickList
         findViewById(R.id.btn_chose_username).setOnClickListener(this);
         name = findViewById(R.id.et_name);
         uniqueName = findViewById(R.id.et_unique_name);
+        uniqueName.setOnClickListener(this);
         uniqueName.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
-
                 if (uniqueName.getCurrentTextColor() == Color.RED) {
-                    uniqueName.setText("");
+                    uniqueName.getText().clear();
                     uniqueName.setTextColor(Color.BLACK);
                 }
             }
@@ -50,6 +51,12 @@ public class ChoseUsername extends AppCompatActivity implements View.OnClickList
                     Toast.makeText(this, getString(R.string.enter_all_fields), Toast.LENGTH_SHORT).show();
                 }
                 break;
+            case R.id.et_unique_name:
+                if (uniqueName.getCurrentTextColor() == Color.RED) {
+                    uniqueName.getText().clear();
+                    uniqueName.setTextColor(Color.BLACK);
+                }
+                break;
         }
     }
 
@@ -57,6 +64,7 @@ public class ChoseUsername extends AppCompatActivity implements View.OnClickList
         if (sucess) {
             FirebaseManager.getInstance().createUser();
             Intent i = new Intent(ChoseUsername.this, ProfileActivity.class);
+            i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(i);
         }else{
             uniqueName.setText(getString(R.string.name_not_unique));
@@ -68,7 +76,8 @@ public class ChoseUsername extends AppCompatActivity implements View.OnClickList
     public void onBackPressed() {
         FirebaseManager.getInstance().logOut(this, () -> {
             Log.d("CHOSE USERNAME","log out success");
-            startActivity(new Intent(ChoseUsername.this, BlankActivity.class));
+            Intent i = new Intent(ChoseUsername.this, BlankActivity.class);
+            startActivity(i);
         });
     }
 }

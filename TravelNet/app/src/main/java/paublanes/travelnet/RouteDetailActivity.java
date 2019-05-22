@@ -80,6 +80,9 @@ public class RouteDetailActivity extends AppCompatActivity implements RoutePoint
         imagesAdapter = new ImagesArrayAdapter(this, route.getImageUrls());
         rv_images.setAdapter(imagesAdapter);
 
+        //Set title
+        setTitle(route.getName());
+
     }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {

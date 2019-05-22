@@ -1,7 +1,7 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar"> <!-- no actionbar?-->
+    <style name="ProfileTheme" parent="Theme.AppCompat.Light.NoActionBar"> <!--pel profile posar la meva toolbar-->
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
@@ -9,10 +9,16 @@
         <item name="overlapAnchor">false</item> <!-- pels items del menu, que quedin per sota-->
     </style>
 
-    <style name="OverflowMenu" parent="Widget.AppCompat.PopupMenu.Overflow">
-
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="overlapAnchor">false</item> <!-- pels items del menu, que quedin per sota-->
+        <item name="colorControlActivated">#000000</item>  //black color
     </style>
 
+    <style name="OverflowMenu" parent="Widget.AppCompat.PopupMenu.Overflow"/>
     <style name="AppTheme.AppBarOverlay" parent="Theme.AppCompat.Light.DarkActionBar" />
 
     <style name="MaterialSearchViewStyle">
