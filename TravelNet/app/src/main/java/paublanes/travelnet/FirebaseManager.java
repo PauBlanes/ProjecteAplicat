@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.Continuation;
@@ -22,7 +21,6 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
-import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
@@ -50,8 +48,6 @@ public class FirebaseManager {
     private final String USERS_C_NAME = "Users";
     private final String ROUTES_C_NAME = "Routes";
     private final String TAG = "Firebase Manager";
-    private final String K_NAME = "name";
-    private final String K_UNIQUENAME = "unique_name";
 
     //Constructors
     private static FirebaseManager instance;
@@ -70,7 +66,7 @@ public class FirebaseManager {
         this.storageReference = FirebaseStorage.getInstance().getReference();
     }
 
-    //Firestore
+    //Routes
     void initListener(final ArrayList<Route> routes, final Runnable updateUI) {
         CollectionReference cRef = db.collection(getMyRoutesPath());
 
@@ -81,7 +77,7 @@ public class FirebaseManager {
                     for (DocumentChange dc : queryDocumentSnapshots.getDocumentChanges()) {
                         Log.d(TAG, String.valueOf(dc.getType()));
                     }
-                    downloadRoutes(routes, updateUI, getUser().getUid());
+                    getMyRoutes(routes, updateUI);
                 }
             }
         });
@@ -91,7 +87,6 @@ public class FirebaseManager {
         docRef.set(route, SetOptions.merge());
     }
     void addRoute(Route route) {
-
         //1. Crear id
         final String routeID = UUID.randomUUID().toString();
         route.setID(routeID);
@@ -106,18 +101,48 @@ public class FirebaseManager {
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                Log.w(TAG, "Error adding document", e);
+                Log.e(TAG, "Error adding document", e);
             }
         });
     }
-    void downloadRoutes(final ArrayList<Route> routes, final Runnable updateUI, String userId) {
+    void getMyRoutes(final ArrayList<Route> routes, final Runnable updateUI) {
 
         //1.Reference to my routes collection
-        CollectionReference cRef = db.collection(getRoutesPathFromId(userId));
-        //Query query = cRef.whereEqualTo("ownerID", mAuth.getCurrentUser().getUid());
+        CollectionReference cRef = db.collection(getMyRoutesPath());
+        downloadRoutes(cRef,routes, updateUI);
+    }
+    void getRoutesFromName(String nameToSearch, final ArrayList<Route> routes, final Runnable updateUI,
+                           final Runnable completionHandler) {
+        //1. Get Collection of users
+        CollectionReference cRef = db.collection(USERS_C_NAME);
 
-        //2. Add listener
-        /*query*/cRef.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+        //2. Find the one with the correct name
+        Query query = cRef.whereEqualTo(Keys.K_UNIQUENAME, nameToSearch);
+        query.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if(task.isSuccessful()){
+                    DocumentSnapshot doc = task.getResult().getDocuments().get(0);
+                    if (doc.exists()) {
+                        Log.d(TAG, "Document with unique id exists");
+
+                        //3. Download their routes
+                        downloadRoutes(doc.getReference().collection(ROUTES_C_NAME), routes, updateUI);
+
+                        //4. Callback
+                        completionHandler.run();
+
+                    }else{
+                        Log.e(TAG, "Document with uique id does not exist");
+                    }
+                }else{
+                    Log.e(TAG, "Query to find doc from unique_name failed");
+                }
+            }
+        });
+    }
+    private void downloadRoutes(CollectionReference cRef, final ArrayList<Route> routes, final Runnable updateUI) {
+        cRef.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
             @Override
             public void onComplete(@NonNull Task<QuerySnapshot> task) {
                 if(task.isSuccessful()){
@@ -135,6 +160,43 @@ public class FirebaseManager {
                 }else{
                     Log.e(TAG, "Query failed");
                 }
+            }
+        });
+    }
+
+    //User info
+    void getUserInfoFromName(String nameToSearch, final Consumer<Map<String,Object>> completionHandler){
+        Query query = db.collection(USERS_C_NAME).whereEqualTo(Keys.K_UNIQUENAME, nameToSearch);
+
+        query.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if(task.isSuccessful()){
+                    DocumentSnapshot doc = task.getResult().getDocuments().get(0);
+                    if (doc.exists()) {
+                        Log.d(TAG, "Could get doc to download user info");
+                        completionHandler.accept(doc.getData());
+                    }else{
+                        Log.e(TAG, "Could not get doc to download user info");
+                    }
+                }else{
+                    Log.e(TAG, "Task to download userinfo failed");
+                }
+            }
+        });
+    }
+    void getMyUserInfo(final Consumer<Map<String,Object>> completionHandler){
+        DocumentReference docRef = db.collection(USERS_C_NAME).document(getUser().getUid());
+        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if (task.isSuccessful()){
+                    DocumentSnapshot doc = task.getResult();
+                    if (doc.exists()) {
+                        completionHandler.accept(doc.getData());
+                        Log.d(TAG, "Get user info sucess");
+                    }else {Log.e(TAG, "My user document does not exist");}
+                }else{Log.e(TAG, "Task to get my user info wasn not successful");}
             }
         });
     }
@@ -247,7 +309,7 @@ public class FirebaseManager {
                         if (document.exists()) {
                             Log.d(TAG, "Username: Document exists!");
                             Map<String, Object> data = document.getData();
-                            if (data.containsKey(K_UNIQUENAME)){
+                            if (data.containsKey(Keys.K_UNIQUENAME)){
                                 completionHandler.accept(true);
                                 Log.d(TAG, "Username: Has username");
                             }else{
@@ -272,7 +334,7 @@ public class FirebaseManager {
         CollectionReference cRef = db.collection(USERS_C_NAME);
 
         //2.Query for this id
-        Query query = cRef.whereEqualTo(K_UNIQUENAME, uniqueName);
+        Query query = cRef.whereEqualTo(Keys.K_UNIQUENAME, uniqueName);
         query.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
             @Override
             public void onComplete(@NonNull Task<QuerySnapshot> task) {
@@ -292,8 +354,8 @@ public class FirebaseManager {
 
                         //2. Generate data to add
                         Map<String, Object> data = new HashMap<>();
-                        data.put(K_NAME, name);
-                        data.put(K_UNIQUENAME, uniqueName);
+                        data.put(Keys.K_NAME, name);
+                        data.put(Keys.K_UNIQUENAME, uniqueName);
 
                         //3. Add data
                         docRef.set(data, SetOptions.merge())
@@ -328,7 +390,7 @@ public class FirebaseManager {
                         String docId = document.getId();
                         String myId = getUser().getUid();
                         if (!docId.equals(myId)){
-                            usernames.add(document.get(K_UNIQUENAME).toString());
+                            usernames.add(document.get(Keys.K_UNIQUENAME).toString());
                         }
                     }
 
@@ -336,34 +398,6 @@ public class FirebaseManager {
 
                 }else{
                     Log.e(TAG, "Query failed");
-                }
-            }
-        });
-    }
-    void showRoutesOf(String nameToSearch,final ArrayList<Route> routes, final Runnable updateUI,
-                      final Runnable completionHandler) {
-        //1. Get Collection of users
-        CollectionReference cRef = db.collection(USERS_C_NAME);
-
-        //2. Find the one with the correct NAME
-        Query query = cRef.whereEqualTo(K_UNIQUENAME, nameToSearch);
-        query.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                if(task.isSuccessful()){
-                    DocumentSnapshot doc = task.getResult().getDocuments().get(0);
-                    if (doc.exists()) {
-                        Log.d(TAG, "Document with uique id exists");
-                        //3. Download their routes
-                        downloadRoutes(routes, updateUI, doc.getId());
-
-                        //4. Callback
-                        completionHandler.run();
-                    }else{
-                        Log.d(TAG, "Document with uique id does not exist");
-                    }
-                }else{
-                    Log.e(TAG, "Query to find doc from unique_name failed");
                 }
             }
         });
