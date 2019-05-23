@@ -168,6 +168,22 @@ public class FirebaseManager {
             }
         });
     }
+    void deleteRoute(String routeId) {
+        db.collection(getMyRoutesPath()).document(routeId)
+                .delete()
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "DocumentSnapshot successfully deleted!");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(TAG, "Error deleting document", e);
+                    }
+                });
+    }
 
     //User info
     void getUserInfoFromName(String nameToSearch, final Consumer<Map<String,Object>> completionHandler){
@@ -268,7 +284,7 @@ public class FirebaseManager {
         }
     }
 
-    //Storage
+    //Images
     void uploadImage (Uri filePath, Consumer<String> completionHandler) {
         if (filePath != null) {
             final StorageReference ref = storageReference.child(getUser().getUid()+"/"+UUID.randomUUID().toString());
@@ -291,8 +307,7 @@ public class FirebaseManager {
                         Uri downloadUri = task.getResult();
                         completionHandler.accept(downloadUri.toString());
                     } else {
-                        // Handle failures
-                        // ...
+                        Log.e(TAG, "Could not upload image");
                     }
                 }
             });
@@ -300,6 +315,26 @@ public class FirebaseManager {
         }else{
             Log.e(TAG, "Image path is null");
         }
+    }
+    void updateRouteImages(Route route) {
+        DocumentReference docRef = db.collection(getMyRoutesPath()).document(route.getID());
+        docRef.update("imageUrls", route.getImageUrls());
+    }
+    void deleteImgFromStorage(String imgUrl) {
+        StorageReference photoRef = storageReference.getStorage().getReferenceFromUrl(imgUrl);
+        photoRef.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                // File deleted successfully
+                Log.d(TAG, "onSuccess: deleted file");
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                // Uh-oh, an error occurred!
+                Log.d(TAG, "onFailure: did not delete file");
+            }
+        });
     }
 
     //Username
@@ -467,4 +502,5 @@ public class FirebaseManager {
                     }
                 });
     }
+
 }

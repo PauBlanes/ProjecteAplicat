@@ -8,17 +8,20 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Map;
 
 public class MoneyAdapter extends RecyclerView.Adapter<MoneyAdapter.ViewHolder> {
 
     private ArrayList<MoneyInfo> moneyInfos;
 
+    MoneyFunctionalities i_implementator;
+    public interface MoneyFunctionalities {
+        void moneyDeleteMenu(View itemView, int index);
+    }
 
     public MoneyAdapter (Context context, ArrayList<MoneyInfo> list) {
         moneyInfos = list;
+        i_implementator = (MoneyFunctionalities) context;
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
@@ -43,6 +46,7 @@ public class MoneyAdapter extends RecyclerView.Adapter<MoneyAdapter.ViewHolder> 
     public void onBindViewHolder(@NonNull MoneyAdapter.ViewHolder viewHolder, int i) {
         viewHolder.tv_category.setText(moneyInfos.get(i).getCategory());
         viewHolder.tv_amount.setText(moneyInfos.get(i).getAmount() +  "$");
+        i_implementator.moneyDeleteMenu(viewHolder.itemView, i);
     }
 
     @Override

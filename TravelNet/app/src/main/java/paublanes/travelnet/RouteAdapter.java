@@ -14,14 +14,16 @@ public class RouteAdapter extends RecyclerView.Adapter<RouteAdapter.ViewHolder> 
 
     private ArrayList<Route> routeList;
 
-    ItemClicked iC_implementator;
-    public interface ItemClicked {
+    ItemFunctionalities i_implementator;
+
+    public interface ItemFunctionalities {
         void OnTap(int index);
+        void routeDeleteMenu(View itemView, int routeIndex);
     }
 
     public RouteAdapter(Context context, ArrayList<Route> list) {
         routeList = list;
-        iC_implementator = (ItemClicked) context;
+        i_implementator = (ItemFunctionalities) context;
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
@@ -34,7 +36,6 @@ public class RouteAdapter extends RecyclerView.Adapter<RouteAdapter.ViewHolder> 
             tv_routeName = itemView.findViewById(R.id.tv_routeName);
             tv_dates = itemView.findViewById(R.id.tv_dates);
             tv_dates.setText("");
-
         }
     }
 
@@ -49,16 +50,18 @@ public class RouteAdapter extends RecyclerView.Adapter<RouteAdapter.ViewHolder> 
     public void onBindViewHolder(@NonNull RouteAdapter.ViewHolder viewHolder, final int i) {
 
         Route r = routeList.get(i);
-         viewHolder.tv_routeName.setText(r.getName());
+        viewHolder.tv_routeName.setText(r.getName());
 
         viewHolder.tv_dates.setText(r.getStartDateString() + " - " + r.getEndDateString());
 
         viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                iC_implementator.OnTap(i); //passar id de firebase
+                i_implementator.OnTap(i); //passar id de firebase
             }
         });
+
+        i_implementator.routeDeleteMenu(viewHolder.itemView, i);
     }
 
     @Override

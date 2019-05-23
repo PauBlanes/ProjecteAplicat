@@ -5,26 +5,32 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Build;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
+import android.view.ContextMenu;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.NumberPicker;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.model.LatLng;
 
-public class RouteDetailActivity extends AppCompatActivity implements RoutePointAdapter.MyInterface, View.OnClickListener {
+public class RouteDetailActivity extends AppCompatActivity
+        implements RoutePointAdapter.RPFunctionalities, View.OnClickListener, MoneyAdapter.MoneyFunctionalities,
+        ImagesArrayAdapter.ImgGridFuncionalities {
 
     Route route;
 
     //Views
     TextView tv_detail_route_name, tv_detail_start_date, tv_detail_end_date;
+    ImageButton fab_add_photos, fab_add_money, fab_add_rp;
 
     //Route point list
     RecyclerView rv_routepoints;
@@ -38,6 +44,8 @@ public class RouteDetailActivity extends AppCompatActivity implements RoutePoint
     RecyclerView rv_images;
     RecyclerView.Adapter imagesAdapter;
 
+    boolean isMyProfile;
+
     //ACTIVITY LIFE CYCLE
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,7 +55,7 @@ public class RouteDetailActivity extends AppCompatActivity implements RoutePoint
         //Get route
         route = (Route)getIntent().getSerializableExtra(Keys.SELECTED_ROUTE);
 
-        //Set views
+        //Title
         tv_detail_route_name = findViewById(R.id.tv_detail_route_name);
         tv_detail_route_name.setText(route.getName());
         tv_detail_start_date = findViewById(R.id.tv_detail_start_date);
@@ -63,7 +71,8 @@ public class RouteDetailActivity extends AppCompatActivity implements RoutePoint
         rv_routepoints.setLayoutManager(new LinearLayoutManager(this));
         rpAdapter = new RoutePointAdapter(this, route.getLocations());
         rv_routepoints.setAdapter(rpAdapter);
-        findViewById(R.id.btn_add_rp).setOnClickListener(this);
+        fab_add_rp = findViewById(R.id.btn_add_rp);
+        fab_add_rp.setOnClickListener(this);
 
         //Recycler view for money Info
         rv_money = findViewById(R.id.rv_money);
@@ -71,9 +80,12 @@ public class RouteDetailActivity extends AppCompatActivity implements RoutePoint
         rv_money.setLayoutManager(new LinearLayoutManager(this));
         moneyAdapter = new MoneyAdapter(this, route.getMoneyInfo());
         rv_money.setAdapter(moneyAdapter);
+        fab_add_money = findViewById(R.id.btn_add_money);
+        fab_add_money.setOnClickListener(this);
 
         //Images
-        findViewById(R.id.btn_add_photos).setOnClickListener(this);
+        fab_add_photos = findViewById(R.id.btn_add_photos);
+        fab_add_photos.setOnClickListener(this);
         rv_images = findViewById(R.id.rv_photos);
         rv_images.setHasFixedSize(true);
         rv_images.setLayoutManager(new GridLayoutManager(this, 4));
@@ -82,7 +94,6 @@ public class RouteDetailActivity extends AppCompatActivity implements RoutePoint
 
         //Set title
         setTitle(route.getName());
-
     }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
@@ -114,27 +125,30 @@ public class RouteDetailActivity extends AppCompatActivity implements RoutePoint
                         FirebaseManager.getInstance().uploadImage(clipData.getItemAt(i).getUri(),
                                 this::addImageToRoute);
                     }
-
-
-
-
+                }//if it's only one
+                else if (data.getData() != null) {
+                    FirebaseManager.getInstance().uploadImage(data.getData(),
+                            this::addImageToRoute);
                 }
             }
         }
     }
-
-    void addImageToRoute (String url) {
-        //Update route
-        route.addImageUrl(url);
-
-        //update recyclerview
-        imagesAdapter.notifyDataSetChanged();
-
-        //update firebase
-        FirebaseManager.getInstance().updateRoute(route);
+    @Override
+    protected void onResume() {
+        super.onResume();
+        isMyProfile = getIntent().getBooleanExtra(Keys.K_IS_MY_PROFILE, true);
+        if (isMyProfile){
+            fab_add_rp.setVisibility(View.VISIBLE);
+            fab_add_money.setVisibility(View.VISIBLE);
+            fab_add_photos.setVisibility(View.VISIBLE);
+        }else{
+            fab_add_rp.setVisibility(View.GONE);
+            fab_add_money.setVisibility(View.GONE);
+            fab_add_photos.setVisibility(View.GONE);
+        }
     }
 
-    //CHANGE NUM NIGHTS
+    //ROUTE POINTS INTERFACE
     @Override
     public void onTapNumNights(int index) {
         showNumPicker(index);
@@ -172,6 +186,46 @@ public class RouteDetailActivity extends AppCompatActivity implements RoutePoint
 
         builder.show();
     }
+    @Override
+    public void rpDeleteMenu(View itemView, int index) {
+        if (isMyProfile) {
+            itemView.setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
+                @Override
+                public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+                    menu.add("delete").setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+                        @Override
+                        public boolean onMenuItemClick(MenuItem item) {
+                            route.deleteLocation(index);
+                            rpAdapter.notifyDataSetChanged();
+                            FirebaseManager.getInstance().updateRoute(route);
+                            return true;
+                        }
+                    });
+                }
+            });
+        }
+    }
+
+    //Money
+    @Override
+    public void moneyDeleteMenu(View itemView, int index) {
+        if (isMyProfile) {
+            itemView.setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
+                @Override
+                public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+                    menu.add("delete").setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+                        @Override
+                        public boolean onMenuItemClick(MenuItem item) {
+                            route.deleteMoneyCategory(index);
+                            moneyAdapter.notifyDataSetChanged();
+                            FirebaseManager.getInstance().updateRoute(route);
+                            return true;
+                        }
+                    });
+                }
+            });
+        }
+    }
 
     //PHOTOS
     void openPhotoPicker() {
@@ -180,8 +234,37 @@ public class RouteDetailActivity extends AppCompatActivity implements RoutePoint
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
         intent.setAction(Intent.ACTION_GET_CONTENT);
 
-        if (Build.VERSION.SDK_INT>=22) {
-            startActivityForResult(Intent.createChooser(intent, "Select Picture"), Keys.K_IMAGE_ACTIVITY);
+        startActivityForResult(Intent.createChooser(intent, "Select Picture"), Keys.K_IMAGE_ACTIVITY);
+
+    }
+    void addImageToRoute (String url) {
+        //Update route locally
+        route.addImageUrl(url);
+
+        //update recyclerview
+        imagesAdapter.notifyDataSetChanged();
+
+        //update firebase
+        FirebaseManager.getInstance().updateRouteImages(route);
+    }
+    @Override
+    public void imgDeleteMenu(View itemView, int index) {
+        if (isMyProfile) {
+            itemView.setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
+                @Override
+                public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+                    menu.add("delete").setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+                        @Override
+                        public boolean onMenuItemClick(MenuItem item) {
+                            FirebaseManager.getInstance().deleteImgFromStorage(route.getImageUrls().get(index));
+                            route.deleteImage(index);
+                            imagesAdapter.notifyDataSetChanged();
+                            FirebaseManager.getInstance().updateRouteImages(route);
+                            return true;
+                        }
+                    });
+                }
+            });
         }
     }
 
@@ -192,11 +275,11 @@ public class RouteDetailActivity extends AppCompatActivity implements RoutePoint
             case R.id.btn_add_rp:
                 startActivityForResult(new Intent(RouteDetailActivity.this, MapsActivity.class), MapsActivity.ACTIVITY_KEY);
                 break;
+            case R.id.btn_add_money:
+                break;
             case R.id.btn_add_photos:
                 openPhotoPicker();
                 break;
         }
     }
-
-
 }

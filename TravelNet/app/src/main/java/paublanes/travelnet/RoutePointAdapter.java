@@ -13,16 +13,17 @@ import java.util.ArrayList;
 
 public class RoutePointAdapter extends RecyclerView.Adapter<RoutePointAdapter.ViewHolder> {
 
-    MyInterface i_implementator;
-    public interface MyInterface {
+    RPFunctionalities i_implementator;
+    public interface RPFunctionalities {
         void onTapNumNights(int index);
+        void rpDeleteMenu(View itemView, int index);
     }
 
     private ArrayList<RoutePoint> routePointsList;
 
     public RoutePointAdapter (Context context, ArrayList<RoutePoint> list) {
         routePointsList  = list;
-        i_implementator = (MyInterface) context;
+        i_implementator = (RPFunctionalities) context;
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
@@ -59,7 +60,7 @@ public class RoutePointAdapter extends RecyclerView.Adapter<RoutePointAdapter.Vi
             }
         });
 
-
+        i_implementator.rpDeleteMenu(viewHolder.itemView, i);
     }
 
     @Override

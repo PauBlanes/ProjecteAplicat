@@ -19,9 +19,15 @@ public class ImagesArrayAdapter extends RecyclerView.Adapter<ImagesArrayAdapter.
     private ArrayList<String> imagesList;
     private Context mContext;
 
+    ImgGridFuncionalities i_implementator;
+    public interface ImgGridFuncionalities {
+        void imgDeleteMenu(View itemView, int index);
+    }
+
     public ImagesArrayAdapter (Context context, ArrayList<String> list) {
         this.imagesList = list;
         this.mContext = context;
+        i_implementator = (ImgGridFuncionalities) context;
     }
 
     public class ImageViewHolder extends RecyclerView.ViewHolder {
@@ -49,6 +55,8 @@ public class ImagesArrayAdapter extends RecyclerView.Adapter<ImagesArrayAdapter.
                 .fit()
                 .centerCrop()
                 .into(viewHolder.iv_image);
+
+        i_implementator.imgDeleteMenu(viewHolder.itemView, i);
     }
 
     @Override

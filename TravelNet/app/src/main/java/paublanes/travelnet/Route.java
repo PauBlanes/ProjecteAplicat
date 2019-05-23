@@ -74,6 +74,9 @@ public class Route implements Serializable {
     public void setLocations(ArrayList<RoutePoint> locations) {
         this.locations = locations;
     }
+    public void deleteLocation(int index) {
+        locations.remove(index);
+    }
 
     //dates
     @Exclude
@@ -118,6 +121,9 @@ public class Route implements Serializable {
     public void setMoneyInfo(ArrayList<MoneyInfo> moneyInfo) {
         this.moneyInfo = moneyInfo;
     }
+    public void deleteMoneyCategory(int index) {
+        moneyInfo.remove(index);
+    }
 
     //Profile image
     public String getProfileImageUrl() {
@@ -143,4 +149,7 @@ public class Route implements Serializable {
         this.imageUrls = imageUrls;
     }
     public void addImageUrl(String imageUrl) {imageUrls.add(imageUrl);}
+    void deleteImage(int index) {
+        imageUrls.remove(index);
+    }
 }

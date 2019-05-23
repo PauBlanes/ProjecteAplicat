@@ -8,6 +8,7 @@ public class Keys {
     //Route detail
     final static String SELECTED_ROUTE = "selected route";
     final static int K_IMAGE_ACTIVITY = 55;
+    final static String K_IS_MY_PROFILE = "is my profile";
 
     //Firebase activity
     final static int K_SIGN_IN = 56;

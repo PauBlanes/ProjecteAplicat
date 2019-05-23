@@ -5,11 +5,13 @@ import android.net.Uri;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.support.v7.widget.Toolbar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.miguelcatalan.materialsearchview.MaterialSearchView;
 
@@ -18,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 public class ProfileActivity extends AppCompatActivity
-        implements View.OnClickListener, RouteAdapter.ItemClicked {
+        implements View.OnClickListener, RouteAdapter.ItemFunctionalities {
 
     //Data
     ArrayList<Route> routes;
@@ -100,8 +102,26 @@ public class ProfileActivity extends AppCompatActivity
 
         Intent i = new Intent(ProfileActivity.this, RouteDetailActivity.class);
         i.putExtra(Keys.SELECTED_ROUTE, routes.get(selectedRoute));
+        i.putExtra(Keys.K_IS_MY_PROFILE, isMyProfile);
         startActivity(i);
     } //interface from RouteAdapter
+    @Override
+    public void routeDeleteMenu(View itemView, int routeIndex) {
+        if (isMyProfile) {
+            itemView.setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
+                @Override
+                public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+                    menu.add("delete").setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+                        @Override
+                        public boolean onMenuItemClick(MenuItem item) {
+                            FirebaseManager.getInstance().deleteRoute(routes.get(routeIndex).getID());
+                            return true;
+                        }
+                    });
+                }
+            });
+        }
+    }
 
     //ADD ROUTE
     void openAddPopup() {
@@ -230,5 +250,4 @@ public class ProfileActivity extends AppCompatActivity
         FirebaseManager.getInstance().getRoutesFromId(id, routes, this::updateRoutesUI);
         FirebaseManager.getInstance().getUserInfoFromId(id, this::updateUserInfoUI);
     }
-
 }
