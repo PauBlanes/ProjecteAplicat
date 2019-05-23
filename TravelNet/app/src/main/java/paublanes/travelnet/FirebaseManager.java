@@ -1,5 +1,6 @@
 package paublanes.travelnet;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -14,6 +15,10 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.dynamiclinks.DynamicLink;
+import com.google.firebase.dynamiclinks.FirebaseDynamicLinks;
+import com.google.firebase.dynamiclinks.PendingDynamicLinkData;
+import com.google.firebase.dynamiclinks.ShortDynamicLink;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentReference;
@@ -77,7 +82,7 @@ public class FirebaseManager {
                     for (DocumentChange dc : queryDocumentSnapshots.getDocumentChanges()) {
                         Log.d(TAG, String.valueOf(dc.getType()));
                     }
-                    getMyRoutes(routes, updateUI);
+                    getRoutesFromId(getUser().getUid(), routes, updateUI);
                 }
             }
         });
@@ -105,10 +110,10 @@ public class FirebaseManager {
             }
         });
     }
-    void getMyRoutes(final ArrayList<Route> routes, final Runnable updateUI) {
+    void getRoutesFromId(String id, final ArrayList<Route> routes, final Runnable updateUI) {
 
         //1.Reference to my routes collection
-        CollectionReference cRef = db.collection(getMyRoutesPath());
+        CollectionReference cRef = db.collection(getRoutesPathFromId(id));
         downloadRoutes(cRef,routes, updateUI);
     }
     void getRoutesFromName(String nameToSearch, final ArrayList<Route> routes, final Runnable updateUI,
@@ -185,8 +190,8 @@ public class FirebaseManager {
             }
         });
     }
-    void getMyUserInfo(final Consumer<Map<String,Object>> completionHandler){
-        DocumentReference docRef = db.collection(USERS_C_NAME).document(getUser().getUid());
+    void getUserInfoFromId(String id, final Consumer<Map<String,Object>> completionHandler){
+        DocumentReference docRef = db.collection(USERS_C_NAME).document(id);
         docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<DocumentSnapshot> task) {
@@ -409,5 +414,57 @@ public class FirebaseManager {
     }
     String getRoutesPathFromId(String id) {
         return USERS_C_NAME + "/" + id + "/" + ROUTES_C_NAME;
+    }
+
+    //Dynamic Links
+    private Uri generateLongDeepLink() {
+        DynamicLink dynamicLink = FirebaseDynamicLinks.getInstance().createDynamicLink()
+                .setLink(Uri.parse("https://paublanes.travelnet/"+getUser().getUid()))
+                .setDomainUriPrefix("https://travelnet.page.link")
+                // Open links with this app on Android
+                .setAndroidParameters(new DynamicLink.AndroidParameters.Builder().build())
+                // Open links with com.example.ios on iOS
+                .setIosParameters(new DynamicLink.IosParameters.Builder("paublanes.travelnet").build())
+                .buildDynamicLink();
+
+        return dynamicLink.getUri();
+    }
+    void generateShortDeepLink(Activity activity, final Consumer<Uri> completionHandler) {
+        Task<ShortDynamicLink> shortLinkTask = FirebaseDynamicLinks.getInstance().createDynamicLink()
+                .setLongLink(generateLongDeepLink())
+                .buildShortDynamicLink()
+                .addOnCompleteListener(activity, new OnCompleteListener<ShortDynamicLink>() {
+                    @Override
+                    public void onComplete(@NonNull Task<ShortDynamicLink> task) {
+                        if (task.isSuccessful()) {
+                            // Short link created
+                            Uri shortLink = task.getResult().getShortLink();
+                            completionHandler.accept(shortLink);
+                            Log.d(TAG, "Short link created successfully");
+                        } else {
+                            Log.e(TAG, "Could not build dynamic link");
+                        }
+                    }
+                });
+
+    }
+    void recieveDynamicLinks(Activity activity, Intent intent, final Consumer<Uri> completionHandler) {
+        FirebaseDynamicLinks.getInstance()
+                .getDynamicLink(intent)
+                .addOnSuccessListener(activity, new OnSuccessListener<PendingDynamicLinkData>() {
+                    @Override
+                    public void onSuccess(PendingDynamicLinkData pendingDynamicLinkData) {
+                        // Get deep link from result (may be null if no link is found)
+                        if (pendingDynamicLinkData != null) {
+                            completionHandler.accept(pendingDynamicLinkData.getLink());
+                        }
+                    }
+                })
+                .addOnFailureListener(activity, new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.e(TAG, "getDynamicLink:onFailure", e);
+                    }
+                });
     }
 }

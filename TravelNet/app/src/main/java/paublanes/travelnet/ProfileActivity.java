@@ -1,6 +1,7 @@
 package paublanes.travelnet;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -32,7 +33,7 @@ public class ProfileActivity extends AppCompatActivity
     Toolbar toolbar;
 
     //Views
-    FloatingActionButton btn_add_route;
+    FloatingActionButton fab_add_route, fab_share;
     TextView tv_name, tv_unique_name;
 
     //Is my profile?
@@ -51,8 +52,10 @@ public class ProfileActivity extends AppCompatActivity
         routes = new ArrayList<>();
 
         //Get view references
-        btn_add_route = findViewById(R.id.fab_add);
-        btn_add_route.setOnClickListener(this);
+        fab_add_route = findViewById(R.id.fab_add);
+        fab_add_route.setOnClickListener(this);
+        fab_share = findViewById(R.id.fab_share);
+        fab_share.setOnClickListener(this);
         tv_name = findViewById(R.id.tv_name); tv_name.setText("");
         tv_unique_name = findViewById(R.id.tv_unique_name); tv_unique_name.setText("");
 
@@ -68,9 +71,14 @@ public class ProfileActivity extends AppCompatActivity
         //Firebase
         firebaseManager = FirebaseManager.getInstance();
         firebaseManager.initListener(routes,this::updateRoutesUI); //init routes listener
-        firebaseManager.getMyUserInfo(this::updateUserInfoUI); //only once because this info cannot be changed(at least now)
+        firebaseManager.getUserInfoFromId(firebaseManager.getUser().getUid(), this::updateUserInfoUI); //only once because this info cannot be changed(at least now)
 
         setTitle(""); //perque en el style windowNoTitle no funciona
+    }
+    @Override
+    protected void onStart() {
+        super.onStart();
+        FirebaseManager.getInstance().recieveDynamicLinks(this, getIntent(), this::receiveProfile);
     }
 
     //TAP EVENTS
@@ -79,6 +87,9 @@ public class ProfileActivity extends AppCompatActivity
         switch (v.getId()){
             case R.id.fab_add:
                 openAddPopup();
+                break;
+            case R.id.fab_share:
+                FirebaseManager.getInstance().generateShortDeepLink(this, this::shareProfile);
                 break;
         }
 
@@ -108,9 +119,11 @@ public class ProfileActivity extends AppCompatActivity
         mapFrag.showRoutePoints();
 
         if (!isMyProfile) {
-            btn_add_route.hide();
+            fab_add_route.hide();
+            fab_share.hide();
         }else{
-            btn_add_route.show();
+            fab_add_route.show();
+            fab_share.show();
         }
     }
     void updateUserInfoUI(Map<String, Object> data) {
@@ -150,7 +163,10 @@ public class ProfileActivity extends AppCompatActivity
             searchView.closeSearch();
         }
         else if(!isMyProfile) {
+
+            isMyProfile = true;
             firebaseManager.initListener(routes, this::updateRoutesUI);
+            firebaseManager.getUserInfoFromId(firebaseManager.getUser().getUid(), this::updateUserInfoUI);
         }
         else{
             super.onBackPressed();
@@ -180,11 +196,11 @@ public class ProfileActivity extends AppCompatActivity
             @Override
             public void onSearchViewShown() {
                 firebaseManager.getUsernames(ProfileActivity.this::updateSuggestions);
-                btn_add_route.hide();
+                fab_add_route.hide();
             }
             @Override
             public void onSearchViewClosed() {
-                btn_add_route.show();
+                fab_add_route.show();
             }
         });
 
@@ -195,6 +211,24 @@ public class ProfileActivity extends AppCompatActivity
         listToArray = usernames.toArray(listToArray);
 
         searchView.setSuggestions(listToArray);
+    }
+
+    //SHARE
+    void shareProfile(Uri shortLink) {
+        Intent intent = new Intent();
+        String msg = "Check out my profile: " + shortLink;
+        intent.setAction(Intent.ACTION_SEND);
+        intent.putExtra(Intent.EXTRA_TEXT, msg);
+        intent.setType("text/plain");
+        startActivity(intent);
+    }
+    void receiveProfile(Uri shortLink) {
+
+        isMyProfile = false;
+
+        String id = shortLink.toString().replace("https://paublanes.travelnet/", "");
+        FirebaseManager.getInstance().getRoutesFromId(id, routes, this::updateRoutesUI);
+        FirebaseManager.getInstance().getUserInfoFromId(id, this::updateUserInfoUI);
     }
 
 }
