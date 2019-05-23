@@ -17,4 +17,7 @@ public class Keys {
     final static String K_NAME = "name";
     final static String K_UNIQUENAME = "unique_name";
 
+    //Show images big
+    final static String K_IMG_TO_SHOW = "img to show";
+
 }

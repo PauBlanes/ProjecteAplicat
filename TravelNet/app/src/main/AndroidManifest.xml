@@ -17,32 +17,30 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
-        <activity
-            android:name=".BlankActivity">
+        <activity android:name=".FullscreenImgActivity"></activity>
+        <activity android:name=".BlankActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <action android:name="android.intent.action.VIEW" /> <!-- Pq donava error -->
                 <category android:name="android.intent.category.LAUNCHER" />
 
                 <!-- aquesta es la que rep deeplinks per obligar a fer contra -->
-                <action android:name="android.intent.action.VIEW"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-                <category android:name="android.intent.category.BROWSABLE"/>
+                <action android:name="android.intent.action.VIEW" />
 
-                <data android:host="paublanes.travelnet"/>
-                <data android:scheme="https"/>
-                <data android:pathPattern=".*"/>
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
 
+                <data android:host="paublanes.travelnet" />
+                <data android:scheme="https" />
+                <data android:pathPattern=".*" />
             </intent-filter>
         </activity>
         <activity
             android:name=".ChoseUsername"
-            android:noHistory="true"/>
+            android:noHistory="true" />
         <activity
             android:name=".ProfileActivity"
-            android:theme="@style/ProfileTheme">
-        </activity>
+            android:theme="@style/ProfileTheme"></activity>
         <activity
             android:name=".RouteDetailActivity"
             android:parentActivityName=".ProfileActivity" />
@@ -52,7 +50,6 @@
         <activity
             android:name=".MapsActivity"
             android:label="@string/title_activity_maps" />
-
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
              (See the file "res/values/google_maps_api.xml").
@@ -64,7 +61,6 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
-
     </application>
 
 </manifest>

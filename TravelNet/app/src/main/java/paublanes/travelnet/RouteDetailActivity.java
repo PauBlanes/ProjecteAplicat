@@ -3,15 +3,20 @@ package paublanes.travelnet;
 import android.content.ClipData;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Build;
+import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityOptionsCompat;
+import android.support.v4.view.ViewCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.MenuItem;
 import android.view.View;
@@ -266,6 +271,17 @@ public class RouteDetailActivity extends AppCompatActivity
                 }
             });
         }
+    }
+    public void onTap(int index, View imageView) {
+
+        Intent intent = new Intent(RouteDetailActivity.this, FullscreenImgActivity.class);
+
+        intent.putExtra(Keys.K_IMG_TO_SHOW, route.getImageUrls().get(index));
+
+        ActivityOptionsCompat options =
+                ActivityOptionsCompat.makeSceneTransitionAnimation(RouteDetailActivity.this, imageView,
+                        ViewCompat.getTransitionName(imageView));
+        startActivity(intent, options.toBundle());
     }
 
     //TAP EVENTS

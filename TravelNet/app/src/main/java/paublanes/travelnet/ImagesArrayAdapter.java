@@ -4,6 +4,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +23,7 @@ public class ImagesArrayAdapter extends RecyclerView.Adapter<ImagesArrayAdapter.
     ImgGridFuncionalities i_implementator;
     public interface ImgGridFuncionalities {
         void imgDeleteMenu(View itemView, int index);
+        void onTap(int index, View view);
     }
 
     public ImagesArrayAdapter (Context context, ArrayList<String> list) {
@@ -57,6 +59,13 @@ public class ImagesArrayAdapter extends RecyclerView.Adapter<ImagesArrayAdapter.
                 .into(viewHolder.iv_image);
 
         i_implementator.imgDeleteMenu(viewHolder.itemView, i);
+
+        viewHolder.iv_image.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                i_implementator.onTap(i, viewHolder.iv_image);
+            }
+        });
     }
 
     @Override

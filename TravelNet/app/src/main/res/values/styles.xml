@@ -16,6 +16,7 @@
         <item name="colorAccent">@color/colorAccent</item>
         <item name="overlapAnchor">false</item> <!-- pels items del menu, que quedin per sota-->
         <item name="colorControlActivated">#000000</item>  //black color
+        <item name="android:windowContentTransitions">true</item>
     </style>
 
     <style name="OverflowMenu" parent="Widget.AppCompat.PopupMenu.Overflow"/>
