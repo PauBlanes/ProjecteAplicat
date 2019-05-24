@@ -238,7 +238,7 @@ public class FirebaseManager {
                 .createSignInIntentBuilder()
                 .setAvailableProviders(Arrays.asList(
                         new AuthUI.IdpConfig.GoogleBuilder().build(),
-                        /*new AuthUI.IdpConfig.TwitterBuilder().build(),*/
+                        new AuthUI.IdpConfig.TwitterBuilder().build(),
                         new AuthUI.IdpConfig.PhoneBuilder().build(),
                         new AuthUI.IdpConfig.EmailBuilder().build()))
                 .setIsSmartLockEnabled(false)

@@ -3,6 +3,8 @@ package paublanes.travelnet;
 import android.graphics.Bitmap;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.transition.Fade;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -17,8 +19,8 @@ public class FullscreenImgActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fullscreen_img);
 
+        //Show image passed with intent
         iv_big = findViewById(R.id.iv_big_img);
-
         Picasso.get()
                 .load(getIntent().getStringExtra(Keys.K_IMG_TO_SHOW))
                 .into(iv_big);

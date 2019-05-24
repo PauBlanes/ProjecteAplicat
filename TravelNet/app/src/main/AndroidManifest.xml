@@ -17,7 +17,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".FullscreenImgActivity"></activity>
         <activity android:name=".BlankActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -40,7 +39,9 @@
             android:noHistory="true" />
         <activity
             android:name=".ProfileActivity"
-            android:theme="@style/ProfileTheme"></activity>
+            android:theme="@style/ProfileTheme"/>
+        <activity
+            android:name=".FullscreenImgActivity" />
         <activity
             android:name=".RouteDetailActivity"
             android:parentActivityName=".ProfileActivity" />
