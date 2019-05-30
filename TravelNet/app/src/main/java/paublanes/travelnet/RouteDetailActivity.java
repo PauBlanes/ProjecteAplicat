@@ -31,6 +31,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.NumberPicker;
 import android.widget.PopupMenu;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -45,6 +46,7 @@ public class RouteDetailActivity extends AppCompatActivity
     //Views
     TextView tv_detail_route_name, tv_detail_start_date, tv_detail_end_date;
     ImageButton fab_add_photos, fab_add_money, fab_add_rp;
+    ProgressBar progressBar;
 
     //Route point list
     RecyclerView rv_routepoints;
@@ -107,6 +109,8 @@ public class RouteDetailActivity extends AppCompatActivity
         imagesAdapter = new ImagesArrayAdapter(this, route.getImageUrls());
         rv_images.setAdapter(imagesAdapter);
         registerForContextMenu(rv_images);
+        progressBar = findViewById(R.id.pb_photos);
+        progressBar.setVisibility(View.GONE);
 
         //Set title
         setTitle(route.getName());
@@ -136,6 +140,9 @@ public class RouteDetailActivity extends AppCompatActivity
                 ClipData clipData = data.getClipData();
 
                 if (clipData != null) {
+
+                    progressBar.setVisibility(View.VISIBLE);
+
                     //Add images chosen to route
                     for (int i = 0;  i < clipData.getItemCount(); i++) {
                         FirebaseManager.getInstance().uploadImage(clipData.getItemAt(i).getUri(),
@@ -353,7 +360,8 @@ public class RouteDetailActivity extends AppCompatActivity
         //Update route locally
         route.addImageUrl(url);
 
-        //update recyclerview
+        //update view
+        progressBar.setVisibility(View.GONE);
         imagesAdapter.notifyDataSetChanged();
 
         //update firebase

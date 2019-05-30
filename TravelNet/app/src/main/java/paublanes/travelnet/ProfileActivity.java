@@ -241,7 +241,7 @@ public class ProfileActivity extends AppCompatActivity
         intent.setAction(Intent.ACTION_SEND);
         intent.putExtra(Intent.EXTRA_TEXT, msg);
         intent.setType("text/plain");
-        startActivity(intent);
+        startActivity(Intent.createChooser(intent, "Share Profile")); //així no es guarda la opció triada
     }
     void receiveProfile(Uri shortLink) {
 
