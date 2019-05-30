@@ -18,20 +18,21 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".BlankActivity">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-                <action android:name="android.intent.action.VIEW" /> <!-- Pq donava error -->
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
 
-                <!-- aquesta es la que rep deeplinks per obligar a fer contra -->
+            <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
-
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
-                <data android:host="paublanes.travelnet" />
-                <data android:scheme="https" />
-                <data android:pathPattern=".*" />
+                <data
+                    android:host="paublanes.travelnet"
+                    android:scheme="https"
+                    android:pathPattern=".*" />
             </intent-filter>
         </activity>
         <activity

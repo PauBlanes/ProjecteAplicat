@@ -1,15 +1,12 @@
 package paublanes.travelnet;
 
 import android.content.Context;
-import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
@@ -22,8 +19,8 @@ public class ImagesArrayAdapter extends RecyclerView.Adapter<ImagesArrayAdapter.
 
     ImgGridFuncionalities i_implementator;
     public interface ImgGridFuncionalities {
-        void imgDeleteMenu(View itemView, int index);
-        void onTap(int index, View view);
+        void onImgTap(int index, View view);
+        void onImgLongTap(int index, View view);
     }
 
     public ImagesArrayAdapter (Context context, ArrayList<String> list) {
@@ -52,20 +49,29 @@ public class ImagesArrayAdapter extends RecyclerView.Adapter<ImagesArrayAdapter.
 
     @Override
     public void onBindViewHolder(@NonNull ImageViewHolder viewHolder, int i) {
+
         Picasso.get()
                 .load(imagesList.get(i))
                 .fit()
                 .centerCrop()
                 .into(viewHolder.iv_image);
 
-        i_implementator.imgDeleteMenu(viewHolder.itemView, i);
-
         viewHolder.iv_image.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                i_implementator.onTap(i, viewHolder.iv_image);
+                i_implementator.onImgTap(i, viewHolder.iv_image);
             }
         });
+
+        viewHolder.iv_image.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                i_implementator.onImgLongTap(i, v);
+                return true;
+            }
+        });
+
+
     }
 
     @Override

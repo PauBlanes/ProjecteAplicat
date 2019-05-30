@@ -1,9 +1,12 @@
 package paublanes.travelnet;
 
+import android.app.Dialog;
 import android.content.ClipData;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.os.Build;
 import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
@@ -19,10 +22,15 @@ import android.support.v7.widget.RecyclerView;
 import android.transition.Fade;
 import android.util.Log;
 import android.view.ContextMenu;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.NumberPicker;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -88,6 +96,7 @@ public class RouteDetailActivity extends AppCompatActivity
         rv_money.setAdapter(moneyAdapter);
         fab_add_money = findViewById(R.id.btn_add_money);
         fab_add_money.setOnClickListener(this);
+        updateTotal();
 
         //Images
         fab_add_photos = findViewById(R.id.btn_add_photos);
@@ -97,6 +106,7 @@ public class RouteDetailActivity extends AppCompatActivity
         rv_images.setLayoutManager(new GridLayoutManager(this, 4));
         imagesAdapter = new ImagesArrayAdapter(this, route.getImageUrls());
         rv_images.setAdapter(imagesAdapter);
+        registerForContextMenu(rv_images);
 
         //Set title
         setTitle(route.getName());
@@ -212,25 +222,121 @@ public class RouteDetailActivity extends AppCompatActivity
         }
     }
 
+
     //Money
     @Override
-    public void moneyDeleteMenu(View itemView, int index) {
+    public void deleteMoneyCategory(int index) {
         if (isMyProfile) {
-            itemView.setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
-                @Override
-                public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-                    menu.add("delete").setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            AlertDialog.Builder builder = new AlertDialog.Builder(RouteDetailActivity.this);
+            // Get the layout inflater
+            LayoutInflater inflater = getLayoutInflater();
+
+            builder.setMessage("Are you sure you want to delete?")
+                    // Add action buttons
+                    .setPositiveButton("YES", new DialogInterface.OnClickListener() {
                         @Override
-                        public boolean onMenuItemClick(MenuItem item) {
+                        public void onClick(DialogInterface dialog, int id) {
                             route.deleteMoneyCategory(index);
                             moneyAdapter.notifyDataSetChanged();
                             FirebaseManager.getInstance().updateRoute(route);
-                            return true;
+                        }
+                    })
+                    .setNegativeButton("NO", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+
                         }
                     });
-                }
-            });
+
+            new Dialog(getApplicationContext());
+            builder.show();
         }
+    }
+    @Override
+    public void editMoneyCategory(int index) {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(RouteDetailActivity.this);
+        // Get the layout inflater
+        LayoutInflater inflater = getLayoutInflater();
+
+        View dialogView = inflater.inflate(R.layout.money_edit, null);
+        EditText et_name = dialogView.findViewById(R.id.edit_money_name);
+        et_name.setText(route.getMoneyInfo().get(index).getCategory());
+        EditText et_amount = dialogView.findViewById(R.id.edit_money_amount);
+        et_amount.setText(String.valueOf(route.getMoneyInfo().get(index).getAmount()));
+
+        builder.setTitle("Money Category Editor");
+        // Inflate and set the layout for the dialog
+        // Pass null as the parent view because its going in the dialog layout
+        builder.setView(dialogView)
+                // Add action buttons
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id) {
+
+                        if (et_amount != null && et_name != null){
+                            route.getMoneyInfo().get(index).setAmount(Integer.parseInt(et_amount.getText().toString()));
+                            route.getMoneyInfo().get(index).setCategory(et_name.getText().toString());
+                            moneyAdapter.notifyDataSetChanged();
+                            FirebaseManager.getInstance().updateRoute(route);
+                            updateTotal();
+                        } else {Log.d("Edit money dialog", "Amount or name is null");}
+
+                    }
+                })
+                .setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+
+                    }
+                });
+
+        new Dialog(getApplicationContext());
+        builder.show();
+
+    }
+    public void addMoney() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(RouteDetailActivity.this);
+        // Get the layout inflater
+        LayoutInflater inflater = getLayoutInflater();
+
+        builder.setTitle("Add Money Category");
+        View dialogView = inflater.inflate(R.layout.money_edit, null);
+
+        // Inflate and set the layout for the dialog
+        // Pass null as the parent view because its going in the dialog layout
+        builder.setView(dialogView)
+                // Add action buttons
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id) {
+                        EditText et_name = dialogView.findViewById(R.id.edit_money_name);
+                        String name = et_name.getText().toString();
+                        EditText et_amount = dialogView.findViewById(R.id.edit_money_amount);
+                        int amount = Integer.parseInt(et_amount.getText().toString());
+
+                        route.getMoneyInfo().add(new MoneyInfo(name, amount));
+                        moneyAdapter.notifyDataSetChanged();
+                        FirebaseManager.getInstance().updateRoute(route);
+
+                        updateTotal();
+                    }
+                })
+                .setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+
+                    }
+                });
+
+        new Dialog(getApplicationContext());
+        builder.show();
+    }
+    public void updateTotal() {
+        int total = 0;
+        for (MoneyInfo each : route.getMoneyInfo()){
+            total += each.getAmount();
+        }
+
+        TextView tv_total = findViewById(R.id.tv_totalMoney);
+        tv_total.setText(String.valueOf(total) + "$");
     }
 
     //PHOTOS
@@ -253,27 +359,7 @@ public class RouteDetailActivity extends AppCompatActivity
         //update firebase
         FirebaseManager.getInstance().updateRouteImages(route);
     }
-    @Override
-    public void imgDeleteMenu(View itemView, int index) {
-        if (isMyProfile) {
-            itemView.setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
-                @Override
-                public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-                    menu.add("delete").setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-                        @Override
-                        public boolean onMenuItemClick(MenuItem item) {
-                            FirebaseManager.getInstance().deleteImgFromStorage(route.getImageUrls().get(index));
-                            route.deleteImage(index);
-                            imagesAdapter.notifyDataSetChanged();
-                            FirebaseManager.getInstance().updateRouteImages(route);
-                            return true;
-                        }
-                    });
-                }
-            });
-        }
-    }
-    public void onTap(int index, View imageView) {
+    public void onImgTap(int index, View imageView) {
 
         Intent intent = new Intent(RouteDetailActivity.this, FullscreenImgActivity.class);
 
@@ -284,6 +370,25 @@ public class RouteDetailActivity extends AppCompatActivity
                         ViewCompat.getTransitionName(imageView));
         startActivity(intent, options.toBundle());
     }
+    @Override
+    public void onImgLongTap(int index, View view) {
+        PopupMenu popupMenu = new PopupMenu(RouteDetailActivity.this, view);
+        popupMenu.getMenuInflater().inflate(R.menu.floating_menu, popupMenu.getMenu());
+        popupMenu.setGravity(Gravity.RIGHT);
+
+        popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                FirebaseManager.getInstance().deleteImgFromStorage(route.getImageUrls().get(index));
+                route.deleteImage(index);
+                imagesAdapter.notifyDataSetChanged();
+                FirebaseManager.getInstance().updateRouteImages(route);
+                return true;
+            }
+        });
+
+        popupMenu.show();
+    }
 
     //TAP EVENTS
     @Override
@@ -293,6 +398,7 @@ public class RouteDetailActivity extends AppCompatActivity
                 startActivityForResult(new Intent(RouteDetailActivity.this, MapsActivity.class), MapsActivity.ACTIVITY_KEY);
                 break;
             case R.id.btn_add_money:
+                addMoney();
                 break;
             case R.id.btn_add_photos:
                 openPhotoPicker();

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal">
@@ -8,7 +9,8 @@
         android:id="@+id/tv_category"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="3"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="10"
         android:paddingLeft="15dp"
         android:paddingTop="5dp"
         android:paddingBottom="5dp"
@@ -19,7 +21,8 @@
         android:id="@+id/tv_amount"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="2"
         android:focusableInTouchMode="true"
         android:gravity="right"
         android:inputType="number"
@@ -28,5 +31,24 @@
         android:paddingBottom="5dp"
         android:text="TextView"
         android:textSize="18sp" />
+
+    <ImageButton
+        android:id="@+id/btn_money_edit"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="2"
+        android:backgroundTint="@color/fui_transparent"
+        app:srcCompat="@drawable/ic_edit" />
+
+    <ImageButton
+        android:id="@+id/btn_money_delete"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_marginRight="5dp"
+        android:layout_weight="2"
+        android:backgroundTint="@color/fui_transparent"
+        app:srcCompat="@drawable/ic_delete" />
 
 </LinearLayout>

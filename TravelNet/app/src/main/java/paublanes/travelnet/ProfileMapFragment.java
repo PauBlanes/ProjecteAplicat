@@ -2,6 +2,8 @@ package paublanes.travelnet;
 
 
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -15,13 +17,22 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.Dash;
+import com.google.android.gms.maps.model.Gap;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MapStyleOptions;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PatternItem;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.maps.android.SphericalUtil;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 
 /**
@@ -54,20 +65,40 @@ public class ProfileMapFragment extends Fragment implements OnMapReadyCallback {
         mMap.clear();
 
         for (Route route: ((ProfileActivity)this.getActivity()).getRoutes()) {
-            
-            PolylineOptions plOptions = new PolylineOptions()
-                    .width(5)
-                    .color(Color.BLACK);
 
-            mMap.addMarker(new MarkerOptions()
-                    .position(route.getRoutePoint(0).getCoordinates()));
-            for (RoutePoint rp: route.getLocations()){
-                plOptions.add(rp.getCoordinates());
+            for (int i = 0; i < route.getLocations().size()-1; i++) {
+                //Make curved line
+                showCurvedPolyline(
+                        route.getRoutePoint(i).getCoordinates(),
+                        route.getRoutePoint(i+1).getCoordinates());
             }
-            mMap.addPolyline(plOptions);
         }
     }
 
+    private void showCurvedPolyline (LatLng latLng1, LatLng latLng2) {
+
+
+        Marker marker1 = mMap.addMarker(new MarkerOptions().position(latLng1).title("Start"));
+        marker1.setIcon(BitmapDescriptorFactory.fromBitmap(resizeMapIcons("route_point", 250, 250)));
+        Marker marker2 = mMap.addMarker(new MarkerOptions().position(latLng2).title("End"));
+        marker2.setIcon(BitmapDescriptorFactory.fromBitmap(resizeMapIcons("route_point", 250, 250)));
+
+        List<PatternItem> pattern = Arrays.<PatternItem>asList(new Dash(30), new Gap(20));
+        PolylineOptions popt = new PolylineOptions().add(latLng1).add(latLng2)
+                .width(5).color(Color.BLACK).pattern(pattern)
+                .geodesic(true);
+        mMap.addPolyline(popt);
+
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+
+        builder.include(marker1.getPosition());
+        builder.include(marker2.getPosition());
+    }
+    public Bitmap resizeMapIcons(String iconName,int width, int height){
+        Bitmap imageBitmap = BitmapFactory.decodeResource(getResources(),getResources().getIdentifier(iconName, "drawable", getActivity().getPackageName()));
+        Bitmap resizedBitmap = Bitmap.createScaledBitmap(imageBitmap, width, height, false);
+        return resizedBitmap;
+    }
 
 
     @Override
