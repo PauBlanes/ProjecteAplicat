@@ -66,6 +66,9 @@ public class ProfileMapFragment extends Fragment implements OnMapReadyCallback {
 
         for (Route route: ((ProfileActivity)this.getActivity()).getRoutes()) {
 
+            Marker marker1 = mMap.addMarker(new MarkerOptions().position(route.getLocations().get(0).getCoordinates()).title("Start"));
+            marker1.setIcon(BitmapDescriptorFactory.fromBitmap(resizeMapIcons("route_point", 250, 250)));
+
             for (int i = 0; i < route.getLocations().size()-1; i++) {
                 //Make curved line
                 showCurvedPolyline(

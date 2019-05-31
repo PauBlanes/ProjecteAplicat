@@ -1,11 +1,14 @@
 package paublanes.travelnet;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.transition.Fade;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -14,6 +17,11 @@ import android.support.v7.widget.Toolbar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.rewarded.RewardItem;
+import com.google.android.gms.ads.rewarded.RewardedAd;
+import com.google.android.gms.ads.rewarded.RewardedAdCallback;
+import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
 import com.miguelcatalan.materialsearchview.MaterialSearchView;
 
 import java.util.ArrayList;
@@ -44,6 +52,9 @@ public class ProfileActivity extends AppCompatActivity
 
     //Firebase
     FirebaseManager firebaseManager;
+
+    //Ads
+    private RewardedAd rewardedAd;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +88,23 @@ public class ProfileActivity extends AppCompatActivity
         firebaseManager.getUserInfoFromId(firebaseManager.getUser().getUid(), this::updateUserInfoUI); //only once because this info cannot be changed(at least now)
 
         setTitle(""); //perque en el style windowNoTitle no funciona
+
+        //Ads
+        rewardedAd = new RewardedAd(this,
+                "ca-app-pub-3940256099942544/5224354917");
+
+        RewardedAdLoadCallback adLoadCallback = new RewardedAdLoadCallback() {
+            @Override
+            public void onRewardedAdLoaded() {
+                // Ad successfully loaded.
+            }
+
+            @Override
+            public void onRewardedAdFailedToLoad(int errorCode) {
+                // Ad failed to load.
+            }
+        };
+        rewardedAd.loadAd(new AdRequest.Builder().build(), adLoadCallback);
     }
     @Override
     protected void onStart() {
@@ -126,9 +154,7 @@ public class ProfileActivity extends AppCompatActivity
 
     //ADD ROUTE
     void openAddPopup() {
-        Intent i = new Intent(ProfileActivity.this, AddRouteActivity.class);
-        i.putExtra(Keys.ROUTE_ORDER, routes.size());
-        startActivity(i);
+        showAd();
     }
 
     //UTILS
@@ -250,5 +276,36 @@ public class ProfileActivity extends AppCompatActivity
         String id = shortLink.toString().replace("https://paublanes.travelnet/", "");
         FirebaseManager.getInstance().getRoutesFromId(id, routes, this::updateRoutesUI);
         FirebaseManager.getInstance().getUserInfoFromId(id, this::updateUserInfoUI);
+    }
+
+    void showAd() {
+        if (rewardedAd.isLoaded()) {
+            Activity activityContext = this;
+            RewardedAdCallback adCallback = new RewardedAdCallback() {
+                public void onRewardedAdOpened() {
+                    // Ad opened.
+                }
+
+                public void onRewardedAdClosed() {
+                    Intent i = new Intent(ProfileActivity.this, AddRouteActivity.class);
+                    i.putExtra(Keys.ROUTE_ORDER, routes.size());
+                    startActivity(i);
+                }
+
+                public void onUserEarnedReward(@NonNull RewardItem reward) {
+                    Log.d("REWARD", "User earned reward");
+                }
+
+                public void onRewardedAdFailedToShow(int errorCode) {
+                    // Ad failed to display
+                }
+            };
+            rewardedAd.show(activityContext, adCallback);
+        } else {
+            Log.d("TAG", "The rewarded ad wasn't loaded yet.");
+            Intent i = new Intent(ProfileActivity.this, AddRouteActivity.class);
+            i.putExtra(Keys.ROUTE_ORDER, routes.size());
+            startActivity(i);
+        }
     }
 }

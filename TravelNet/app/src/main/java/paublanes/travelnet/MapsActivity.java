@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Geocoder;
 import android.location.Location;
+import android.location.LocationManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -115,12 +116,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                             }else{
                                 Log.e(TAG, "location is null");
-                                Toast.makeText(MapsActivity.this, "Location is disabled", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(MapsActivity.this, "Please enable your gps", Toast.LENGTH_SHORT).show();
                             }
 
                         }else {
                             Log.e(TAG, "couldnt find location");
-                            Toast.makeText(MapsActivity.this, "Unable to get current location", Toast.LENGTH_SHORT).show();
+                            //Toast.makeText(MapsActivity.this, "Unable to get current location", Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
@@ -193,7 +194,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         || event.getAction() == KeyEvent.ACTION_DOWN
                         || event.getAction() == KeyEvent.KEYCODE_ENTER) {
 
-                    Toast.makeText(MapsActivity.this, "asd", Toast.LENGTH_SHORT).show();
                     //amagar teclat
                     InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(et_search.getWindowToken(), 0);
@@ -249,7 +249,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        Toast.makeText(this, "Map is Ready", Toast.LENGTH_SHORT).show();
+        Log.d("MAP", "Map is ready");
         init(); //Set listener per la searchbar
 
         if (locationPermissionGranted) {

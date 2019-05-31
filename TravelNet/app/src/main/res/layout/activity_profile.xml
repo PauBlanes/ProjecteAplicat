@@ -13,7 +13,7 @@
         android:layout_height="300dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/toolbar_container"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar_layout"
         tools:layout="@layout/fragment_profile_map" />
 
     <fragment
@@ -51,6 +51,7 @@
 
     <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
+        android:id="@+id/toolbar_layout"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent">
 
@@ -88,7 +89,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:paddingBottom="5dp"
-                    android:text="@pblanes"
+                    android:text="test"
                     android:textColor="@color/browser_actions_bg_grey"
                     android:textSize="18sp" />
             </LinearLayout>

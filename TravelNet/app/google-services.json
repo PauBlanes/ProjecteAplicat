@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "480237942434-mqtrh8db3kp18pfj1ulkd1d0gr7h3n7f.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "paublanes.travelnet",
+            "certificate_hash": "38c2282b8f8085d615c2bb6b6aaba08caa9cab0a"
+          }
+        },
+        {
           "client_id": "480237942434-cd6o6v0rro1e2rve46dil8jvp26ijkh6.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
